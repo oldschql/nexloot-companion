@@ -1,0 +1,235 @@
+NEXLOOT COMPANION APP + WEBAPP – SETUP GUIDE (Companion app 1.6.2)
+==================================================================
+
+Note: the companion app and its Discord posts are in German. This guide quotes the German
+labels you will see, with the English meaning in brackets. The website is in English and German.
+
+
+What is what?
+-------------
+* NexLoot add-on (0.26.0 or newer): every player needs it. It works fine without anything below.
+* Database (Supabase, free): stores your guild's state (coins, history, sessions, permissions) and
+  takes 10 % off all coins every Wednesday at 05:30 (Central European Time).
+* Website (Netlify, free): shows everyone the current state – leaderboard, history with filters,
+  sessions with answers and rolls, statistics and rules. Read-only. English and German, works on phones.
+* Companion app (Windows): a small program in the system tray, only for officers / the loot master.
+  It uploads the state from WoW to the database and brings newer data back into the game.
+  Optional: posts every raid and the weekly decay to Discord, and emails a backup every evening.
+
+Every guild sets up its own system: its own database, its own website, its own password.
+There is no shared server. Nobody but you can reach your data.
+
+Done once by the guild leader: steps 1 and 2 (about 15 minutes).
+Every officer / loot master: step 3 (about 3 minutes).
+Discord (step 4) and the email backup (step 5) are optional.
+
+
+1. SET UP THE DATABASE (Supabase)
+---------------------------------
+1. Sign up for free at https://supabase.com and create a new project
+   (name e.g. "NexLoot", a region near you; you won't need the database password later).
+2. Open the file nexloot.sql in the folder "1 Supabase" with a text editor. At the very bottom:
+       values ('MyGuild', extensions.crypt('HIER-EIN-LANGES-PASSWORT', ...
+   * 'MyGuild' is your guild ID. Replace it with a name of your own, e.g. your guild name.
+     The same ID goes into config.js and the companion app later.
+   * Replace HIER-EIN-LANGES-PASSWORT ("put a long password here") with your own write password
+     (long, no single quote '). Only officers get it.
+3. In Supabase, open "SQL Editor" on the left, paste the whole file and press "Run".
+   You should see "Success. No rows returned" (lines saying "NOTICE" are normal).
+   If you get an error about "pg_cron": on the left go to "Integrations" -> "Cron" -> "Enable"
+   (or "Database" -> "Extensions" -> turn on "pg_cron") and run the file again.
+4. Write down two values:
+   * Project URL: click "Connect" at the top, or Project Settings -> Data API
+     (looks like https://abcdefgh.supabase.co)
+   * Public key: Project Settings -> API Keys, the "Publishable key"
+     (starts with sb_publishable_). Or the "anon" key under "Legacy API Keys".
+   NEVER use or share the "secret" / "service_role" key.
+
+Changing the password: run the last lines of the file (from "insert into public.nexloot_secret")
+again in the SQL Editor with the new password. Then enter the new password in every companion app.
+
+
+2. PUT THE WEBSITE ONLINE (Netlify)
+----------------------------------
+1. Open config.js in the folder "2 Website" with a text editor and fill in:
+       supabaseUrl: "https://abcdefgh.supabase.co",
+       anonKey: "sb_publishable_...",
+       guild: "MyGuild"          (your guild ID from step 1)
+   Save.
+2. Sign up for free at https://app.netlify.com (sign in first, otherwise the site is only
+   online for a short time).
+3. Drag the whole folder "2 Website" onto https://app.netlify.com/drop.
+   Done: the site runs at an address like https://randomname.netlify.app.
+4. Under "Site configuration" -> "Change site name" pick your own name,
+   e.g. https://my-guild-loot.netlify.app.
+
+The site reloads the data every minute. Until an officer runs the companion app, it says
+"No data yet". If you open index.html without a filled-in config.js, it shows sample data.
+
+
+3. COMPANION APP (every officer / loot master)
+----------------------------------------------
+Before you start: NexLoot 0.26.0 or newer installed, and logged in once with your character.
+Windows 10 or 11. Nothing to install: the app uses the Windows PowerShell built into Windows.
+
+1. Before unzipping: right-click the ZIP file -> Properties -> tick "Unblock" at the bottom -> OK.
+   (Otherwise Windows asks every time it starts.)
+2. Copy the folder "3 Companion" to a permanent place, e.g. Documents\NexLoot Companion.
+3. Double-click "NexLoot Companion.bat". The first start opens the setup window:
+   * "Verbindungscode" (connection code): you get it from your guild leader (see below). Paste it
+     and the fields for Supabase address, key, guild and password fill in by themselves.
+     The guild leader enters the values from steps 1 and 2 by hand:
+     "Supabase-Adresse" (Project URL), "Öffentlicher Schlüssel" (public key),
+     "Gilde (Kennung)" (guild ID), "Schreib-Passwort" (write password).
+   * "Dein Charaktername" (your character name, shown on the website as "changed by").
+   * WoW: found automatically (e.g. "_classic_beta_ - Konto 12345678#1"). If not, click
+     "WoW-Ordner selbst wählen …" (choose WoW folder) and pick the folder that contains WTF and
+     Interface.
+   * "Webapp-Adresse" (website address, optional): the menu can then open the website.
+   * "Verbindung testen" (test connection), then "Speichern" (save).
+4. A golden N appears in the system tray (maybe behind the small arrow ^). Right-click it for the
+   menu. "Mit Windows starten" (start with Windows) is on, so the data stays current even if you
+   were offline for a week.
+5. Type /reload in the game once. The app uploads the state and the website shows it.
+
+Change settings later: right-click the N -> "Einstellungen …" (settings), or double-click
+"NexLoot Companion - Setup.bat".
+
+Connection code for more officers: right-click the N -> "Verbindungscode für andere Offiziere
+kopieren" (copy connection code for other officers) and send it PRIVATELY only (it contains the
+write password).
+
+Updating to a newer version: right-click the N -> "Beenden" (quit), copy the new files over the
+old ones (your settings are kept) and double-click "NexLoot Companion.bat". Website: upload the
+new index.html together with your filled-in config.js as in step 2.
+
+
+4. DISCORD (optional, no bot needed)
+------------------------------------
+After every raid the companion app posts a summary to a Discord channel: who got which item (with
+choice and coins, the item name links to Wowhead), the raid points (bench included) and below that
+the coins of all players, sorted and numbered (the change in this raid in brackets). If it gets too
+long for Discord, the coins go into a second message. All you need is a webhook.
+
+1. In Discord: right-click the channel -> "Edit Channel" -> "Integrations" -> "Webhooks"
+   -> "New Webhook". Name it e.g. "NexLoot", then "Copy Webhook URL".
+   (You need the "Manage Webhooks" permission on the server.)
+   Nicer: upload "NexLoot-Logo.png" from the folder "3 Companion" as the webhook's avatar.
+2. Right-click the N -> "Einstellungen …" (settings) -> paste into "Discord-Webhook" ->
+   "Discord testen" (a test message appears in the channel) -> "Speichern" (save).
+3. "Dein Charaktername" must be spelled exactly as in the game. Your app then posts the raids you
+   led as soon as you log out or /reload.
+   If the raid was led by someone without the app and webhook, your app posts it after
+   30-40 minutes. Every raid is posted only once, even if several officers entered the webhook.
+   Raids from before you entered the webhook are not posted.
+4. Send again: right-click the N -> "Letzten Raid nach Discord senden" (send last raid to Discord).
+5. If a raid that was already posted is reopened and changed, the app does not post a second full
+   summary, only a correction: what was taken back (struck through), what was added and the new
+   coins of the players affected. Without a change, nothing is posted.
+6. Weekly decay: on Wednesdays after the decay in the database (05:30), the app posts
+   "📉 Wöchentlicher Verfall −10 %" (weekly decay) with all players and their new Nex-Coins. It is
+   posted exactly ONCE, even if several officers run the app with a webhook. If no PC was on that
+   Wednesday, the first app that starts within 2 days posts it.
+
+The webhook address is like a password: anyone who has it can write to the channel. The app stores
+it encrypted; it is never in the log or in the connection code. If it leaks anyway: delete the
+webhook in Discord and create a new one.
+
+
+5. EMAIL BACKUP (optional)
+--------------------------
+Every evening the app emails a backup of the database as "NexLoot-Sicherung-<date>.sql": first
+CREATE TABLE, then the complete state (coins, history, sessions with answers and rolls,
+permissions, item names ...). That is enough to restore everything. One officer setting this up
+is enough (ideally the guild leader).
+
+Setup (with a Gmail account as sender, about 3 minutes):
+1. Create an app password for the Gmail account that will send the mails:
+   https://myaccount.google.com/apppasswords (name e.g. "NexLoot") -> you get a 16-letter
+   password. If the page doesn't work, first turn on 2-Step Verification under "Security".
+   Your normal Gmail password does not work here.
+2. Right-click the N -> "Sicherung per Mail …" (backup by email):
+   - tick "Jeden Abend eine Sicherung per Mail schicken" (send a backup every evening)
+   - "Empfänger" (recipient): your address
+   - "Absender" (sender): the Gmail address from step 1, "App-Passwort": the password from step 1
+     (spaces don't matter)
+   - "Mailserver" smtp.gmail.com, port 587 (preset), "Uhrzeit" (time) e.g. 22
+3. "Test-Sicherung jetzt senden" (send test backup now) -> the mail with the file arrives (check
+   spam too). Then "Speichern" (save).
+
+From then on a mail goes out every evening from the time you set. If the PC was off, the app sends
+the backup on its next start. Send one right away: right-click -> "Sicherung jetzt per Mail
+senden". Other mail providers work too (enter their server and port, encrypted with STARTTLS,
+usually port 587).
+
+Restoring (emergencies only, e.g. if the Supabase project is gone):
+1. New project: run nexloot.sql first (as in step 1).
+2. Supabase -> "SQL Editor" -> paste the whole .sql file from the mail -> "Run".
+   It replaces the guild's state with the backup.
+3. New project = new address and key: update config.js of the website and the settings of the
+   apps. After that the companion apps sync as usual.
+
+
+HOW THE SYNC WORKS
+------------------
+* WoW saves the NexLoot data when you log out and on /reload. A few seconds later the companion
+  app uploads the new state.
+* If the database has newer data (e.g. another officer led a raid while you were offline, or the
+  Wednesday decay), the app writes it into the NexLoot folder (file WebData.lua). At your next
+  login or /reload the add-on takes it over and shares it with everyone through the guild.
+* The add-on never takes over data from the website on top of its own changes that are not
+  synced yet. Then the chat says "Webapp-Stand nicht übernommen" (website data not taken over)
+  and the app syncs first.
+* If the database only has the decay as news and your game has entries of its own, the app
+  applies the decay to your game data and uploads both together. Nothing gets lost.
+* Conflict: if two officers handed out loot independently (without seeing each other in the game
+  or through the app in between), the database state wins for everyone. The app tells you and
+  writes a report (click the message). It lists the entries from your game that were not taken
+  over, so you can add them with /nex history add or /nex coins.
+* If an officer's app has not been running for more than 12 hours, the add-on reminds them at login.
+* Supabase also keeps every version (the last 300). To restore one in the SQL Editor:
+      select id, rev, created_at, created_by from nexloot_snapshots order by id desc;
+      select nexloot_restore('MyGuild', <id>, '<write password>');
+* Free Supabase projects are paused after 7 days without use; then the decay does not run either.
+  As long as a companion app is running, that doesn't happen. A missed decay is made up as soon as
+  the project runs again. Emergency in game: /nex decay now (only takes coins off if a week is
+  really missing).
+
+
+SECURITY
+--------
+* The website and the public key can only read. Writing needs the write password. The app stores
+  it with Windows encryption, readable only by your Windows user. The same goes for the Discord
+  webhook and the email app password.
+* The secret Supabase key (secret / service_role) is not needed anywhere.
+* Send the connection code to officers privately only; it contains the write password.
+
+
+TROUBLESHOOTING
+---------------
+* The N is red: right-click -> "Status anzeigen" (show status) or "Protokoll öffnen" (open log).
+* Windows says "Windows protected your PC" or a virus scanner complains: the app is a PowerShell
+  script that runs hidden in the background. Unblock the ZIP before unzipping (step 3.1). You can
+  read the source code in the .ps1 files with any text editor.
+* A black terminal window in the taskbar (Windows 11): Windows Settings -> System -> For developers
+  -> Terminal -> "Windows Console Host". Don't close that window, or the app quits too.
+* Email backup: "Anmeldung beim Mailserver abgelehnt" (mail server login refused): create a new app
+  password and enter it (the normal Gmail password doesn't work). After an error the app tries
+  again 30 minutes later.
+* Discord: "Webhook gibt es nicht mehr" (webhook no longer exists): it was deleted in Discord.
+  Create a new one and enter it in the settings. "zu viele Nachrichten" (too many messages):
+  Discord slows down for a moment; the app retries by itself.
+* "falsches Schreib-Passwort" (wrong write password): enter the right password in the settings.
+  The guild ID must also be spelled exactly as in nexloot.sql.
+* No connection to the database (error under "Status anzeigen"): check your internet. If the
+  Supabase project is paused, open it in Supabase and click "Resume project".
+* The app can't write WebData.lua: your Windows user needs write access to the WoW folder (normally
+  the case, otherwise add-ons wouldn't work either).
+
+Uninstall: right-click -> turn off "Mit Windows starten" -> "Beenden" (quit). Then delete the app
+folder, the folder %APPDATA%\NexLootCompanion and the file WebData.lua in the NexLoot add-on folder.
+
+
+NOTES
+-----
+* Free, without warranty (MIT license, see LICENSE). Not an official Blizzard Entertainment product.
