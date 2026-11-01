@@ -95,6 +95,7 @@ h1 { font: 30px/1.05 var(--font-display); margin: 0; letter-spacing: 0.04em; tex
 .tools input { flex: 1 1 200px; }
 .tools select { flex: 0 1 220px; max-width: 100%; }
 .tools .count { margin-left: auto; color: var(--muted); font-size: 14px; }
+.tools[hidden] { display: none; }
 .scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 15px; }
 th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -185,7 +186,8 @@ tr.sess-ans > td:first-child { border-left: 3px solid color-mix(in srgb, var(--a
 .stack > i + i { box-shadow: inset 1px 0 0 var(--panel); }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; color: var(--muted); margin-top: 10px; }
 .legend span { white-space: nowrap; }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 22%, transparent); }
 .legend b { color: var(--fg); font: 600 13px var(--font-num); margin-left: 4px; }
 .curve { position: relative; min-height: 120px; touch-action: pan-y; }
 .curve svg { display: block; width: 100%; overflow: visible; }
@@ -207,6 +209,225 @@ tr.sess-ans > td:first-child { border-left: 3px solid color-mix(in srgb, var(--a
 .prio { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; counter-reset: p; }
 .prio li { display: flex; align-items: center; gap: 10px; counter-increment: p; }
 .prio li::before { content: counter(p); font: 600 13px var(--font-num); color: var(--muted); width: 1.4em; text-align: right; }
+/* Gilde (NexLoot 0.29): Mitglieder mit Level, Rolle, Talenten, Berufen; Raid-Planung bei Level 60; Meilensteine */
+.gsum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.gsum[hidden] { display: none; }
+.gsum > div { padding: 12px 16px; min-width: 0; }
+.gsum > div + div { border-left: 1px solid var(--line); }
+.gsum .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.gsum .v { font: 600 20px/1.3 var(--font-num); font-variant-numeric: tabular-nums; }
+.gsum .v small { font: 400 13px var(--font-body); color: var(--muted); }
+.gsum .rl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rp { display: inline-flex; align-items: baseline; gap: 6px; font-size: 13px; padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--c, var(--muted)) 45%, var(--line)); background: color-mix(in srgb, var(--c, var(--muted)) 10%, var(--panel)); }
+.rp b { font: 600 14px var(--font-num); color: var(--fg); }
+.cbar { display: flex; height: 10px; border-radius: 4px; overflow: hidden; margin-top: 8px; background: var(--panel-2); }
+.cbar > i { display: block; height: 100%; }
+.cbar > i + i { box-shadow: inset 1px 0 0 var(--panel); }
+.gsum .legend { margin-top: 6px; font-size: 12.5px; gap: 2px 10px; }
+@media (max-width: 720px) {
+  .gsum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gsum > div:nth-child(3) { border-left: 0; }
+  .gsum > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+.role { display: inline-block; font-size: 13px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap;
+  color: color-mix(in oklab, var(--c) var(--cls-mix), #000); background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
+.role.guess { border-style: dashed; background: transparent; }
+.lv { font: 600 15px var(--font-num); }
+.lv.max { color: var(--gold); }
+.spec { white-space: nowrap; }
+.profs { font-size: 14px; }
+.profs > span { white-space: nowrap; }
+.profs .sec { color: var(--muted); }
+#p-gilde td, #p-gilde th { padding-inline: 10px; }
+#p-gilde .sub { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+#p-gilde .sub.show-s { display: none; }
+@media (max-width: 560px) {
+  #p-gilde .sub.show-s { display: block; }
+  #p-gilde td, #p-gilde th { padding-inline: 6px; }
+  #p-gilde td .who { white-space: normal; }
+  #p-gilde .role { padding: 1px 6px; font-size: 12px; }
+  #p-gilde .date { white-space: normal; }
+}
+.on { color: var(--good); font-weight: 600; white-space: nowrap; }
+.on::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
+th button.sort { background: none; border: 0; padding: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; cursor: pointer; }
+th button.sort:hover, th[aria-sort] button.sort { color: var(--fg); }
+th button.sort::after { content: ""; margin-left: 4px; }
+th[aria-sort="ascending"] button.sort::after { content: "▲"; font-size: 9px; }
+th[aria-sort="descending"] button.sort::after { content: "▼"; font-size: 9px; }
+.tools label.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.tools label.chk input { flex: none; }
+.gnote { padding: 10px 16px 0; color: var(--muted); font-size: 14px; margin: 0; }
+.gnote[hidden] { display: none; }
+.ms { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.ms li { display: flex; gap: 6px 12px; align-items: baseline; flex-wrap: wrap; }
+.ms .date { min-width: 8.2em; }
+.ms .mv { font: 600 13px var(--font-num); padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.ms .mv.max { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 50%, var(--line)); }
+@media (max-width: 560px) { .ms .date { min-width: 0; } }
+/* Anmelden mit Discord, Mein Charakter, Raids (Setups), Verwaltung */
+.btn.discord { display: inline-flex; align-items: center; gap: 8px; background: #5865f2; border-color: #5865f2; color: #fff; font-weight: 600; }
+.btn.discord:hover { background: #4752c4; border-color: #4752c4; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, var(--line)); }
+.btn.small { padding: 2px 8px; font-size: 13px; }
+.authbox { display: inline-flex; }
+.usermenu { position: relative; }
+.usermenu > summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; }
+.usermenu > summary::-webkit-details-marker { display: none; }
+.usermenu .menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 230px; display: grid; background: var(--panel);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 8px 24px #0006; padding: 4px; }
+.usermenu .menu button { text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: 4px; cursor: pointer; }
+.usermenu .menu button:hover { background: var(--panel-2); }
+.av { width: 22px; height: 22px; border-radius: 50%; flex: none; object-fit: cover; vertical-align: middle; }
+.av.ph { display: inline-grid; place-items: center; background: #5865f2; color: #fff; font: 600 12px var(--font-body); }
+.tag { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 50%, var(--line)); white-space: nowrap; }
+.mine { padding: 14px 16px 16px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, var(--panel)), var(--panel)); }
+.mine[hidden] { display: none; }
+.mine-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.mine-head h2 { font: 22px/1.2 var(--font-display); margin: 0; }
+.mine-act { margin-left: auto; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.mine-act select { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 8px; max-width: 100%; }
+.mine-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; }
+.mine-facts .v small { display: block; font-size: 13px; line-height: 1.35; }
+.mine-facts .v.nr { font: 600 15px/1.35 var(--font-body); }
+.mine-facts .v.nr a { color: var(--fg); }
+@media (max-width: 720px) { .mine-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mine-msg { margin: 6px 0 0; color: var(--muted); }
+.mine-msg.bad { color: var(--bad); }
+.claim { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.claim input { flex: 1 1 220px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 10px; min-width: 0; }
+.flash { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; background: var(--panel); border: 1px solid color-mix(in srgb, var(--good) 55%, var(--line));
+  border-radius: var(--radius); padding: 10px 16px; box-shadow: 0 8px 24px #0007; max-width: min(92vw, 560px); }
+.flash.bad { border-color: color-mix(in srgb, var(--bad) 60%, var(--line)); }
+.flash[hidden] { display: none; }
+dialog.dlg { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--fg); padding: 18px 20px; width: min(520px, 92vw); }
+dialog.dlg::backdrop { background: #000a; }
+.dlg h2 { font: 20px/1.2 var(--font-display); margin: 0 0 10px; }
+.dlg h3 { font-size: 15px; margin: 16px 0 0; }
+.dlg-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.dlg .ask { font-size: 16px; margin: 4px 0 0; }
+.mychars { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.mychars li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mychars li .btn { margin-left: auto; }
+.star { background: none; border: 0; cursor: pointer; font-size: 18px; line-height: 1; color: var(--muted); padding: 0 2px; }
+.star.on { color: var(--gold); }
+.setup { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.setup:last-child { border-bottom: 0; }
+.setup-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.setup-head h2 { font: 20px/1.2 var(--font-display); margin: 0; }
+.setup-head .btn { margin-left: auto; }
+.mine-where { font-weight: 600; }
+/* Vergangene Raids, Session zum Setup */
+#raidPast { border-top: 1px solid var(--line); }
+#raidPast:empty { border-top: 0; }
+.past-h { font: 18px/1.2 var(--font-display); margin: 0; padding: 14px 16px 6px; }
+.past-item { padding: 0; }
+.past-item > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 10px 16px; cursor: pointer; list-style: none; }
+.past-item > summary::-webkit-details-marker { display: none; }
+.past-item > summary::before { content: "▸"; color: var(--muted); width: 1em; }
+.past-item[open] > summary::before { content: "▾"; }
+.past-item > summary:hover { background: var(--panel-2); }
+.past-item .pdate { color: var(--muted); font: 500 13px var(--font-num); min-width: 8.5em; }
+.past-item .ptitle { font-weight: 700; }
+.pbadge { font-size: 13px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; }
+.pbadge.pos { border-color: color-mix(in srgb, var(--good) 60%, var(--line)); }
+.past-body { padding: 0 16px 14px; }
+.past-more { padding: 10px 16px 14px; }
+.sessbox { margin-top: 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 6px; font-size: 14px; }
+.sb-l .k { color: var(--muted); }
+.sb-l .who { white-space: normal; }
+.sb-sel { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.sb-sel select { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 6px; max-width: 100%; color: var(--fg); }
+.rhbox { margin-top: 10px; background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid #e8a33d; border-radius: var(--radius);
+  padding: 10px 12px; display: grid; gap: 6px; font-size: 14px; }
+.rh-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rh-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; margin: 0 0 8px; background: var(--panel-2); border: 1px solid var(--line);
+  border-left: 3px solid #e8a33d; border-radius: var(--radius); font-size: 14px; }
+.rh-row label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
+.rh-row select { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 6px; max-width: 100%; min-width: 0; color: var(--fg); }
+.rh-row .chk { gap: 4px; color: var(--muted); }
+.rh-row .rh-miss { flex-basis: 100%; font-size: .85em; }
+.pc .rk { font: 700 12px var(--font-num); width: 1.1em; text-align: center; flex: none; }
+.pc .rk.ok { color: var(--good); } .pc .rk.maybe { color: #e8a33d; } .pc .rk.absent { color: var(--bad); } .pc .rk.bench { color: var(--muted); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.rcount { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 10px 0; }
+.rcount .legend { margin: 0 0 0 4px; font-size: 12.5px; }
+.edit-counts { padding: 0 12px; }
+.grps { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grps.g1, .grps.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 720px) { .grps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { /* Handy: weiter 2 Gruppen nebeneinander, etwas kompakter */
+  .grps { gap: 6px; } .grps.g1 { grid-template-columns: minmax(0, 1fr); }
+  .grp { padding: 6px; } .pc { padding: 2px 4px; gap: 4px; font-size: 13px; } .slot { height: 24px; }
+}
+.grp { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.grp.wide { margin-top: 10px; flex-direction: row; flex-wrap: wrap; align-items: center; }
+.grp.wide .gh { width: 100%; }
+.gh { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; min-height: 22px; }
+.gh .here { margin-left: auto; text-transform: none; letter-spacing: 0; }
+.pc { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 4px; background: var(--panel); border: 1px solid transparent; min-width: 0; font-size: 14px; }
+.grp.wide .pc { flex: 0 1 auto; }
+.pc .who { overflow: hidden; text-overflow: ellipsis; }
+.pc.me { border-color: color-mix(in srgb, var(--gold) 60%, var(--line)); }
+.pc.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+.pc[draggable="true"] { cursor: grab; }
+.pc .rl { font: 700 11px var(--font-num); margin-left: auto; padding: 0 4px; }
+.pc .rl.T { color: #59a6ff; } .pc .rl.H { color: #4ccf6a; } .pc .rl.D { color: #ff6464; } .pc .rl.guess { opacity: .55; }
+.pc .lvl { color: var(--muted); font: 500 11px var(--font-num); }
+.slot { height: 28px; border: 1px dashed var(--line); border-radius: 4px; }
+.dz.over { outline: 2px dashed var(--accent); outline-offset: 2px; }
+.edit-wrap { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 12px; padding: 0 12px 12px; }
+@media (max-width: 760px) { .edit-wrap { grid-template-columns: minmax(0, 1fr); } .pool { max-height: 45vh; } }
+.edit-main .note { margin-top: 0; }
+.pool { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; display: flex; flex-direction: column; gap: 6px; max-height: 72vh; min-width: 0; }
+.pool input, .pool select, .edit-tools input { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 8px; min-width: 0; }
+.pool-l { overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.seg button { border: 0; background: var(--panel-2); padding: 5px 12px; cursor: pointer; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.edit-tools #seTitle { flex: 1 1 220px; }
+.edit-foot { border-top: 1px solid var(--line); border-bottom: 0; }
+.edit-foot .count { margin-left: auto; }
+.muted.small { font-size: 13px; }
+table.adm td { vertical-align: top; }
+.adm .sub { font-size: 12.5px; color: var(--muted); }
+.chipx { display: inline-flex; align-items: center; gap: 4px; padding: 1px 2px 1px 8px; border: 1px solid var(--line); border-radius: 999px; margin: 2px 2px 2px 0; white-space: nowrap; }
+.chipx button { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 5px; }
+.chipx button:hover { color: var(--bad); }
+.emo-paste { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.emo-paste textarea { flex: 1 1 260px; min-width: 0; min-height: 2.6em; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 6px 8px; color: var(--fg); font: 13px/1.4 var(--font-num); resize: vertical; }
+table.emo-t td { vertical-align: middle; }
+table.emo-t input { width: 100%; min-width: 0; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 8px;
+  color: var(--fg); font: 13px var(--font-num); }
+table.emo-t input.bad { border-color: var(--bad); }
+table.emo-t .emo-prev { width: 44px; text-align: center; }
+img.emo { width: 24px; height: 24px; object-fit: contain; vertical-align: middle; }
+.emo-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 0; }
+.emo-foot .muted { margin-right: auto; }
+@media (max-width: 640px) { /* Handy: Klasse und Symbol nebeneinander, darunter das Feld */
+  table.emo-t thead { display: none; }
+  table.emo-t, table.emo-t tbody { display: block; }
+  table.emo-t tr { display: grid; grid-template-columns: 1fr 44px; align-items: center; gap: 2px 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  table.emo-t td { display: block; border: 0; padding: 2px 12px; }
+  table.emo-t td:nth-child(3) { grid-column: 1 / -1; }
+  .emo-paste textarea { min-height: 4.6em; }
+}
+.linkf { display: flex; flex-wrap: wrap; gap: 6px; }
+.linkf select, .linkf input { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 8px; min-width: 0; max-width: 100%; }
+.linkf.newid input[name="did"] { flex: 1 1 190px; }
+table.adm .linkf select { max-width: 160px; }
+@media (max-width: 640px) { /* Handy: jede Zeile als Karte statt breiter Tabelle */
+  table.adm thead { display: none; }
+  table.adm, table.adm tbody, table.adm tr, table.adm td { display: block; }
+  table.adm tr { border-bottom: 1px solid var(--line); padding: 6px 0; }
+  table.adm td, table.adm td.hide-s { display: block; border: 0; padding: 3px 12px; }
+  table.adm .linkf select { max-width: none; flex: 1 1 150px; }
+}
+.freelist { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 footer { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; }
 @media (max-width: 560px) {
   h1 { font-size: 26px; }
@@ -232,6 +453,7 @@ footer { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; g
     </div>
     <div class="state">
       <span class="pill"><span class="dot" id="dot"></span><span id="stateText">Lädt …</span></span>
+      <span class="authbox" id="authBox"></span>
       <button class="btn" id="reloadBtn" type="button">Aktualisieren</button>
       <span class="lang" role="group" aria-label="Sprache / Language"><button type="button" data-lang="de" aria-pressed="true">DE</button><button type="button" data-lang="en" aria-pressed="false">EN</button></span>
     </div>
@@ -251,11 +473,15 @@ footer { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; g
     <button class="tab" role="tab" id="t-historie" data-tab="historie" aria-selected="false">Historie<span class="n" id="nHist"></span></button>
     <button class="tab" role="tab" id="t-sessions" data-tab="sessions" aria-selected="false">Sessions<span class="n" id="nSess"></span></button>
     <button class="tab" role="tab" id="t-statistik" data-tab="statistik" aria-selected="false">Statistik</button>
+    <button class="tab" role="tab" id="t-gilde" data-tab="gilde" aria-selected="false">Gilde<span class="n" id="nGuild"></span></button>
+    <button class="tab" role="tab" id="t-raids" data-tab="raids" aria-selected="false">Raids<span class="n" id="nRaids"></span></button>
+    <button class="tab" role="tab" id="t-verwaltung" data-tab="verwaltung" aria-selected="false" hidden>Verwaltung</button>
     <button class="tab" role="tab" id="t-regeln" data-tab="regeln" aria-selected="false">Regeln</button>
   </nav>
 
   <main>
     <section class="panel" id="p-rangliste" role="tabpanel" aria-labelledby="t-rangliste">
+      <div class="mine" id="mine" hidden></div>
       <div class="tools">
         <input id="qCoins" type="search" placeholder="Spieler suchen" aria-label="Spieler suchen">
         <span class="count" id="cCoins"></span>
@@ -326,6 +552,42 @@ footer { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; g
       </section>
     </section>
 
+    <section class="panel" id="p-gilde" role="tabpanel" aria-labelledby="t-gilde" hidden>
+      <div class="gsum" id="gSum" hidden></div>
+      <div class="tools">
+        <input id="qGuild" type="search" placeholder="Spieler, Klasse, Beruf oder Rang" aria-label="Gilde durchsuchen">
+        <select id="gClass" aria-label="Klasse"></select>
+        <select id="gRole" aria-label="Rolle"></select>
+        <select id="gLevel" aria-label="Level"></select>
+        <select id="gProf" aria-label="Beruf"></select>
+        <label class="chk"><input type="checkbox" id="gOnline">nur online</label>
+        <span class="count" id="cGuild"></span>
+      </div>
+      <p class="gnote" id="gNote" hidden></p>
+      <div class="scroll"><table>
+        <thead><tr id="gHead"><th data-sort="name"><button class="sort" type="button">Spieler</button></th><th class="num" data-sort="level"><button class="sort" type="button">Level</button></th>
+          <th class="hide-s">Klasse</th><th>Rolle</th><th class="hide-s">Talente</th><th class="hide-s">Berufe</th>
+          <th data-sort="seen"><button class="sort" type="button"><span class="hide-s">Zuletzt </span>online</button></th></tr></thead>
+        <tbody id="bGuild"></tbody>
+      </table></div>
+      <section class="stat-block" aria-labelledby="hMs" id="gMsBlock" hidden>
+        <div class="stat-head"><h2 id="hMs">Meilensteine</h2></div>
+        <p class="note">Level 25, 40 und 60 (dafür gibt es Legacy-Punkte), ab 40 geht Dual-Spec. Kommt auch in den Discord, wenn ein Offizier das in der Companion-App eingerichtet hat.</p>
+        <ul class="ms" id="gMs"></ul>
+      </section>
+    </section>
+
+    <section class="panel" id="p-raids" role="tabpanel" aria-labelledby="t-raids" hidden>
+      <div class="tools" id="raidTools"></div>
+      <div id="raidList"></div>
+      <div id="raidPast"></div>
+      <div id="raidEdit" hidden></div>
+    </section>
+
+    <section class="panel" id="p-verwaltung" role="tabpanel" aria-labelledby="t-verwaltung" hidden>
+      <div id="admBox"></div>
+    </section>
+
     <section class="panel" id="p-spieler" hidden>
       <div class="tools">
         <button class="btn" id="pBack" type="button">← Rangliste</button>
@@ -383,6 +645,9 @@ footer { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; g
     </section>
   </main>
 
+  <dialog class="dlg" id="dlg"><div id="dlgBody"></div></dialog>
+  <div class="flash" id="flash" role="status" hidden></div>
+
   <footer>
     <span id="footLeft">NexLoot Webapp</span>
     <span id="footRight"></span>
@@ -396,6 +661,66 @@ footer { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; g
 "use strict";
 // Sprache (DE / EN): Schluessel ist der deutsche Text, {0} {1} sind Platzhalter
 var EN = {"Lädt …": "Loading …", "Aktualisieren": "Refresh", "Überblick": "Overview", "Spieler mit Coins": "Players with coins", "Vergebene Items": "Items awarded", "Coins gesamt": "Total coins", "Nächster Verfall": "Next decay", "Bereiche": "Sections", "Rangliste": "Leaderboard", "Historie": "History", "Sessions": "Sessions", "Statistik": "Statistics", "Regeln": "Rules", "Spieler suchen": "Search players", "Spieler": "Player", "Zuletzt gewonnen": "Last won", "Spieler, Item, Wahl oder Grund": "Player, item, choice or reason", "Historie durchsuchen": "Search history", "Session": "Session", "Art": "Type", "Alles": "Everything", "Nur Loot": "Loot only", "Nur Coins": "Coins only", "Filter zurücksetzen": "Reset filters", "Datum": "Date", "Item / Änderung": "Item / change", "Wahl / Grund": "Choice / reason", "Session, Host, Spieler oder Item": "Session, host, player or item", "Sessions durchsuchen": "Search sessions", "Host": "Host", "Vergeben": "Awarded", "Status": "Status", "Zeitraum": "Period", "Gesamter Zeitraum": "All time", "Letzte 12 Wochen": "Last 12 weeks", "Letzte 4 Wochen": "Last 4 weeks", "Anwesenheit": "Attendance", "Raids": "Raids", "Anteil": "Share", "Ersatz": "", "bank": "Bench", "Nex-Coins im Verlauf": "Nex-Coins over time", "Spieler im Verlauf": "Player in the chart", "Aus der Historie zurückgerechnet. Beim Verfall auf etwa 1 Coin genau, „Coins für die Gruppe“ zählen ab NexLoot 0.22.": "Calculated backwards from the history. Accurate to about 1 coin around decay; “Coins for the group” count from NexLoot 0.22 on.", "Items pro Spieler": "Items per player", "Ohne Items zum Entzaubern. Balken nach Wahl.": "Without items for disenchanting. Bars by choice.", "Coins bezahlt": "Coins paid", "Sprache / Language": "Sprache / Language", "Upgrade + Coins": "Upgrade + Coins", "Upgrade": "Upgrade", "Raid OS": "Raid OS", "OS/PvP": "OS/PvP", "Passen": "Pass", "Transmog": "Transmog", "Von Hand": "Manual", "Zum Entzaubern": "Disenchant", "Automatisch": "Automatic", "Coins geändert": "Coins changed", "Coins für die Gruppe": "Coins for the group", "Verfall": "Decay", "Aus der Datenbank gelöscht": "Removed from the database", "Alle": "Everyone", "Gruppe": "Group", "(Gruppe)": "(group)", " (je Spieler)": " (per player)", "hatte {0}": "had {0}", "gerade eben": "just now", "vor {0} Min.": "{0} min ago", "vor {0} Std.": "{0} h ago", "vor {0} Tagen": "{0} days ago", "geschlossen": "closed", "aktiv": "active", "offen": "open", "Session von {0}": "Session of {0}", "Nicht erreichbar": "Not reachable", "Keine Daten": "No data", "Noch keine Daten": "No data yet", "Stand {0}": "Version {0}", "Beispieldaten: In <code>config.js</code> fehlen noch Supabase-Adresse und Schlüssel. Danach zeigt die Seite den echten Stand.": "Sample data: <code>config.js</code> is still missing the Supabase address and key. After that, this page shows the real data.", "Die Datenbank antwortet gerade nicht ({0}). ": "The database is not responding right now ({0}). ", "Angezeigt wird der zuletzt geladene Stand.": "Showing the last loaded data.", "Bitte später noch einmal versuchen.": "Please try again later.", "Noch keine Daten: Sobald ein Offizier mit der Companion-App einmal aus WoW ausgeloggt hat (oder /reload), erscheint hier der Stand.": "No data yet: as soon as an officer with the companion app has logged out of WoW once (or used /reload), the data appears here.", "geladen {0}": "loaded {0}", "Gilde {0} · Nex-Coins, Loot und Sessions": "Guild {0} · Nex-Coins, loot and sessions", "Noch keine Daten.": "No data yet.", "Historie von {0}": "History of {0}", "Kein Spieler gefunden.": "No player found.", "{0} von {1} Spielern": "{0} of {1} players", "Alle Spieler": "All players", "Alle Sessions": "All sessions", "Keine Einträge für diesen Filter.": "No entries for this filter.", "{0} von {1}": "{0} of {1}", "Noch keine Items.": "No items yet.", "Kein Interesse": "No interest", "noch offen": "still open", "nicht vergeben": "not awarded", "Keine Session gefunden.": "No session found.", "ohne Namen": "unnamed", "{0} Spieler": "{0} players", "Noch keine Raids mit Teilnehmerliste in diesem Zeitraum. Die Liste gibt es ab NexLoot 0.21 – sie kommt über die Companion-App ab 1.3.": "No raids with a participant list in this period yet. The list exists from NexLoot 0.21 on and comes via the companion app 1.3 or newer.", "1 Raid mit Teilnehmerliste": "1 raid with a participant list", "{0} Raids mit Teilnehmerliste": "{0} raids with a participant list", " ({0} ältere ohne Liste zählen nicht mit)": " ({0} older ones without a list are not counted)", "Noch keine Teilnehmer.": "No participants yet.", "Keine Items in diesem Zeitraum.": "No items in this period.", "Top 5 (meiste Coins)": "Top 5 (most coins)", "Noch keine Coins.": "No coins yet.", "Nex-Coins im Verlauf: {0}": "Nex-Coins over time: {0}", "{0} jetzt {1}": "{0} now {1}", "1 Raid mit Teilnehmern": "1 raid with participants", "{0} Raids mit Teilnehmern": "{0} raids with participants", "{0} Spieler mit Items": "{0} players with items", "← Rangliste": "← Leaderboard", "Ganze Historie": "Full history", "Bekommene Items": "Items received", "Item": "Item", "Wahl": "Choice", "Grund": "Reason", "Raid-Punkte und Coin-Änderungen": "Raid points and coin changes", "Nex-Coins": "Nex-Coins", "Platz": "Rank", "von {0}": "of {0}", "{0} von {1} Raids": "{0} of {1} raids", "Items": "Items", "Raid-Punkte erhalten": "Raid points received", "Noch keine Einträge.": "No entries yet.", "Alles zu {0}": "Everything about {0}", "1 Antwort": "1 answer", "{0} Antworten": "{0} answers", "Notiz": "Note", "Wurf": "Roll", "Coins": "Coins", "Gesamt": "Total", "Gewinner": "Winner", "Wurf {0} + {1} Coins": "Roll {0} + {1} coins", "Gewürfelt wird nur in der höchsten gewählten Stufe (hier: {0}).": "Only the highest tier anyone picked rolls (here: {0}).", "Bei {0} kommt der Coin-Stand auf den Wurf.": "With {0}, the coin balance is added to the roll.", "ca.": "approx.", "danach {0}": "after: {0}"};
+Object.assign(EN, {"Gilde": "Guild", "Spieler, Klasse, Beruf oder Rang": "Player, class, profession or rank", "Gilde durchsuchen": "Search guild", "Klasse": "Class", "Rolle": "Role", "Level": "Level", "Beruf": "Profession", "nur online": "online only", "Spieler": "Player", "Talente": "Talents", "Berufe": "Professions", "Rang": "Rank", "Zuletzt online": "Last online", "Meilensteine": "Milestones", "Level 25, 40 und 60 (dafür gibt es Legacy-Punkte), ab 40 geht Dual-Spec. Kommt auch in den Discord, wenn ein Offizier das in der Companion-App eingerichtet hat.": "Levels 25, 40 and 60 (they earn Legacy points); dual spec opens up at 40. Also posted to Discord if an officer set that up in the companion app.", "Nicht angegeben - aus der Klasse": "Not set - from the class", "Tank": "Tank", "Heiler": "Healer", "Schaden": "Damage", "ohne Angabe": "not set", "online": "online", "Alle Klassen": "All classes", "Alle Rollen": "All roles", "Alle Level": "All levels", "Alle Berufe": "All professions", "Level {0}": "Level {0}", "ab Level {0}": "Level {0}+", "Mitglieder": "Members", "{0} online": "{0} online", "{0} bei 55–59": "{0} at 55–59", "Rollen bei Level {0}": "Roles at level {0}", "Klassen bei Level {0}": "Classes at level {0}", "noch niemand": "nobody yet", "Die Gildenübersicht ist noch nicht eingerichtet: In Supabase einmal nexloot_gilde.sql ausführen (siehe Anleitung).": "The guild overview is not set up yet: run nexloot_gilde.sql once in Supabase (see the guide).", "Die Gildenliste lädt gerade nicht ({0}).": "The guild roster is not loading right now ({0}).", "Noch keine Gildenliste. Sie kommt, sobald sich ein Offizier mit NexLoot 0.29 und der Companion-App 1.7 ausloggt (oder /reload).": "No guild roster yet. It arrives as soon as an officer with NexLoot 0.29 and companion app 1.7 logs out (or types /reload).", "Niemand passt zu den Filtern.": "Nobody matches the filters.", "{0} Mitglieder": "{0} members", "{0} von {1}": "{0} of {1}", "Die Gildenliste lädt gerade nicht ({0}). Angezeigt wird der zuletzt geladene Stand.": "The guild roster is not loading right now ({0}). Showing the last loaded state.", "Rolle, Talente und Berufe gibt es von {0} der {1} Mitglieder - von allen mit NexLoot ab 0.29 (Rolle: im Spiel unter Optionen → Meine Rolle im Raid).": "Role, talents and professions are known for {0} of {1} members - everyone with NexLoot 0.29 or later (role: in game under Options → My raid role).", "der erste 60er der Gilde": "the guild's first level 60", "Platz {0} in der Gilde": "#{0} in the guild", "Dual-Spec möglich": "dual spec unlocked", "aktualisiert {0}": "updated {0}", "Zuletzt": "Last", "vor 1 Tag": "1 day ago"}); // 0.29: Gilde
+Object.assign(EN, {"Raids": "Raids", "Verwaltung": "Admin", "(ohne Namen)": "(no name)", "(zugeordnet von {0})": "(assigned by {0})", "Abbrechen": "Cancel", "Abmelden": "Log out", "Als Entwurf speichern": "Save as draft", "Als Lieblings-Charakter (Startseite)": "Set as favorite character (start page)", "Als Offizier freischalten": "Unlock as officer", "Als Offizier freischalten …": "Unlock as officer …", "Anmeldung hat nicht geklappt: {0}": "Login failed: {0}", "Anmeldung …": "Logging in …", "Bearbeiten": "Edit", "Bitte einen Titel eingeben.": "Please enter a title.", "Bitte mit Discord anmelden.": "Please log in with Discord.", "Charakter": "Character", "Charakter dazu": "Add character", "Charakter dazunehmen": "Add a character", "Charakter wechseln": "Switch character", "Charakter {0} ist nicht in der Gilde": "Character {0} is not in the guild", "Charaktere": "Characters", "Charaktere aus der Gildenliste, die noch niemandem gehören.": "Characters from the guild roster that nobody has claimed yet.", "Charaktere …": "Characters …", "Charaktername": "Character name", "Das bin ich": "That's me", "Datum und Uhrzeit": "Date and time", "Die Gruppe ist voll (5 Spieler).": "The group is full (5 players).", "Discord": "Discord", "Discord-ID": "Discord ID", "Discord-ID (nur Ziffern)": "Discord ID (digits only)", "Discord-Konten und Charaktere": "Discord accounts and characters", "Discord-Name": "Discord name", "Discord-Name (optional)": "Discord name (optional)", "Du bist jetzt als Offizier freigeschaltet.": "You are now unlocked as an officer.", "Entwurf": "Draft", "Ersatzbank": "Bench", "Fehler: {0}": "Error: {0}", "Freischalten": "Unlock", "Gib das Schreib-Passwort der Gilde ein (dasselbe wie in der Companion-App). Danach kannst du Setups planen und Charaktere zuordnen. Das Passwort wird nicht gespeichert.": "Enter the guild's write password (the same as in the companion app). Then you can plan setups and assign characters. The password is not stored.", "Gruppe {0}": "Group {0}", "Ist dein Charakter schon vergeben, wende dich an einen Offizier.": "If your character is already taken, ask an officer.", "Jeder kann seinen Charakter selbst wählen. Hier ordnest du die anderen zu - auch Spieler, die sich nie angemeldet haben (mit ihrer Discord-ID: in Discord Rechtsklick auf den Namen → „Benutzer-ID kopieren“, dafür muss der Entwicklermodus an sein).": "Everyone can pick their own character. Here you assign the others - including players who never logged in (with their Discord ID: in Discord, right-click the name → \"Copy User ID\"; developer mode must be on).", "Löschen": "Delete", "Meine Charaktere": "My characters", "Meine Charaktere …": "My characters …", "Meine Seite": "My page", "Melde dich mit Discord an, dann siehst du hier deinen Charakter.": "Log in with Discord to see your character here.", "Mit Discord anmelden": "Log in with Discord", "Mitglied": "Member", "Neues Discord-Konto zuordnen": "Assign a new Discord account", "Neues Setup": "New setup", "Nicht dabei": "Not attending", "Noch kein Charakter verknüpft.": "No character linked yet.", "Noch kein Raid geplant.": "No raid planned yet.", "Noch kein Setup. „Neues Setup“ legt eins an.": "No setup yet. \"New setup\" creates one.", "Nächster Raid": "Next raid", "Offizier": "Officer", "Ohne Discord ({0})": "Without Discord ({0})", "Platz {0} von {1}": "#{0} of {1}", "Raid-Setups sind noch nicht eingerichtet: In Supabase einmal nexloot_konten.sql ausführen (siehe Anleitung).": "Raid setups are not set up yet: run nexloot_konten.sql once in Supabase (see the guide).", "Raidgröße": "Raid size", "Schließen": "Close", "Schreib-Passwort": "Write password", "Setup gelöscht.": "Setup deleted.", "Setup gibt es nicht mehr": "This setup no longer exists", "Setup „{0}“ wirklich löschen?": "Really delete the setup \"{0}\"?", "Spieler in eine Gruppe ziehen oder antippen und dann „hierher“ wählen.": "Drag players into a group, or tap a player and then choose \"here\".", "Suchen": "Search", "Titel": "Title", "Titel, z. B. Onyxia": "Title, e.g. Onyxia", "Verknüpfung lösen": "Unlink", "Veröffentlichen": "Publish", "Veröffentlichte Setups sieht jeder, Entwürfe nur ihr Offiziere.": "Everyone sees published setups; only officers see drafts.", "Welcher Charakter bist du?": "Which character are you?", "Wer in welcher Gruppe ist. Melde dich mit Discord an, dann ist dein Charakter markiert.": "Who is in which group. Log in with Discord and your character is highlighted.", "Wähle deinen Charakter aus der Gildenliste. Twinks kannst du danach dazunehmen.": "Pick your character from the guild roster. You can add alts afterwards.", "Zuletzt geändert von {0}": "Last changed by {0}", "alle zugeordnet": "all assigned", "die eigene Rolle kann man nicht ändern": "you can't change your own role", "hierher": "here", "lösen": "unlink", "nicht dabei": "not attending", "niemand": "nobody", "niemand mehr frei": "nobody left", "noch kein Setup": "no setup yet", "noch nicht eingeteilt": "not placed yet", "noch nie angemeldet": "never logged in", "nur für Offiziere": "officers only", "raus": "remove", "ungültige Discord-ID (nur Ziffern)": "invalid Discord ID (digits only)", "veröffentlicht": "published", "zuletzt": "last", "zum Mitglied": "make member", "zum Offizier": "make officer", "zuordnen": "assign", "{0} ausgewählt - jetzt auf „hierher“ bei einer Gruppe tippen.": "{0} selected - now tap \"here\" on a group.", "{0} ist jetzt mit deinem Discord verknüpft.": "{0} is now linked to your Discord.", "{0} ist schon mit einem anderen Discord-Konto verknüpft - bitte an einen Offizier wenden": "{0} is already linked to another Discord account - please ask an officer", "– Charakter –": "– character –", "– wählen –": "– choose –", "„{0}“ als Entwurf gespeichert.": "\"{0}\" saved as draft.", "„{0}“ ist veröffentlicht.": "\"{0}\" is published.", "abgebrochen": "cancelled", "Änderungen verwerfen?": "Discard changes?", "{0} hat das Setup inzwischen geändert - bitte neu laden": "{0} has changed the setup in the meantime - please reload", "höchstens 12 Charaktere pro Discord-Konto": "at most 12 characters per Discord account", "ungültiger Charakter": "invalid character", "Titel fehlt oder ist zu lang": "Title missing or too long", "ungültiges Setup": "invalid setup", "höchstens 5 Spieler pro Gruppe": "at most 5 players per group", "bitte mit Discord anmelden": "please log in with Discord", "nur mit Discord-Anmeldung": "only with a Discord login", "falsches Schreib-Passwort": "wrong write password", "unbekannte Gilde": "unknown guild", "Verwerfen": "Discard", "steht so in Discord": "posted like this in Discord", "Gilde fehlt": "guild missing", "Raidgröße 5, 10, 20, 25 oder 40": "raid size 5, 10, 20, 25 or 40", "ungültige Rolle": "invalid role", "ungültiger Status": "invalid status"}); // Login, Raids, Verwaltung
+Object.assign(EN, {"Vergangene Raids": "Past raids", "Noch keine vergangenen Raids.": "No past raids yet.", "Ältere laden": "Load older", "keine Session": "no session",
+  "{0} von {1} da": "{0} of {1} there", "Session: {0}": "Session: {0}", "dabei": "attended", "nicht dabei gewesen": "did not attend", "automatisch": "automatic",
+  "automatisch: {0}": "automatic: {0}", "automatisch (keine gefunden)": "automatic (none found)", "von Hand zugeordnet": "assigned by hand", "automatisch zugeordnet": "assigned automatically",
+  "1 Item vergeben": "1 item awarded", "{0} Items vergeben": "{0} items awarded", "Für diese Session gibt es keine Teilnehmerliste (erst ab NexLoot 0.21).": "This session has no participant list (NexLoot 0.21 or later).",
+  "Dabei: {0} von {1} aus den Gruppen": "Attended: {0} of {1} from the groups", "Gefehlt": "Missing", "Von der Ersatzbank eingesprungen": "Stepped in from the bench", "Ohne Setup dabei": "Attended without a spot",
+  "Die zugeordnete Session gibt es nicht mehr.": "The assigned session no longer exists.", "Keine Session (so eingestellt).": "No session (set that way).", "Keine passende Session gefunden.": "No matching session found.",
+  "Session zuordnen:": "Assign session:", "Session zugeordnet.": "Session assigned.", "Für „Vergangene Raids“ in Supabase einmal die neue nexloot_konten.sql ausführen (siehe Anleitung).": "For “Past raids”, run the new nexloot_konten.sql once in Supabase (see the guide).",
+  "ungültige Session": "invalid session"}); // vergangene Raids, Session zum Setup
+Object.assign(EN, {"Klassen-Symbole für Discord": "Class icons for Discord",
+  "Für die Klassen-Symbole in Supabase einmal die neue nexloot_konten.sql ausführen (siehe Anleitung).": "For class icons, run the new nexloot_konten.sql once in Supabase (see the guide).",
+  "Wie bei Raid-Helper: In der Discord-Nachricht zum Setup steht vor jedem Spieler das Symbol seiner Klasse. Dafür müssen die Symbole als Emojis in Discord liegen (siehe Anleitung, Schritt 9). Pro Klasse den Emoji-Code eintragen (z. B. <:Krieger:123456789012345678>), die Bildadresse des Emojis oder nur seine ID. Leer = wie bisher nur die Rolle.":
+    "Like Raid-Helper: in the Discord message for a setup, each player gets the icon of their class. The icons have to exist as emojis in Discord (see the guide, step 9). For each class, enter the emoji code (e.g. <:Warrior:123456789012345678>), the emoji's image address or just its ID. Empty = only the role, as before.",
+  "Mehrere auf einmal: in Discord \\:Krieger: \\:Paladin: … schicken, die Antwort kopieren und hier einfügen": "Several at once: send \\:Warrior: \\:Paladin: … in Discord, copy what it shows and paste it here",
+  "Mehrere Emoji-Codes auf einmal": "Several emoji codes at once", "Zuordnen": "Assign", "Klasse": "Class", "Symbol": "Icon", "Emoji-Code, Bildadresse oder ID": "Emoji code, image address or ID",
+  "Symbol für {0}": "Icon for {0}", "So nicht - Emoji-Code, Bildadresse oder ID eintragen": "Not like this - enter an emoji code, image address or ID",
+  "Nicht zugeordnet (Name passt zu keiner Klasse): {0} - bitte unten bei der Klasse eintragen.": "Not assigned (name matches no class): {0} - please enter it at the class below.",
+  "{0} von {1} Klassen mit Symbol": "{0} of {1} classes with an icon", "Speichern": "Save",
+  "1 Klasse zugeordnet - prüfen und „Speichern“.": "1 class assigned - check it and press \"Save\".", "{0} Klassen zugeordnet - prüfen und „Speichern“.": "{0} classes assigned - check them and press \"Save\".",
+  "Da stehen nur Namen wie :Krieger: ohne Nummer. In Discord vor jedes Emoji einen \\ setzen und abschicken - dann zeigt Discord den Code mit Nummer.":
+    "That only contains names like :Warrior: without a number. In Discord, put a \\ before each emoji and send it - then Discord shows the code with the number.",
+  "Keine Emoji-Codes gefunden (so sehen sie aus: <:Krieger:123456789012345678>).": "No emoji codes found (they look like this: <:Warrior:123456789012345678>).",
+  "Klassen-Symbole gespeichert.": "Class icons saved.", "Die Companion-App schreibt die Discord-Nachrichten der kommenden Raids in den nächsten Minuten neu.": "The companion app rewrites the Discord messages of upcoming raids within the next few minutes.",
+  "ungültige Klassen-Symbole": "invalid class icons"}); // Klassen-Symbole fuer Discord
+Object.assign(EN, {"bei Raid-Helper angemeldet": "signed up in Raid-Helper", "bei Raid-Helper vorläufig angemeldet": "tentative in Raid-Helper",
+  "kommt laut Raid-Helper später": "late according to Raid-Helper", "bei Raid-Helper auf der Ersatzbank": "on the bench in Raid-Helper", "bei Raid-Helper abgemeldet": "absent in Raid-Helper",
+  "{0} angemeldet": "{0} signed up", "{0} vorläufig/später": "{0} tentative/late", "{0} Ersatzbank": "{0} bench", "{0} abgemeldet": "{0} absent",
+  "Raid-Helper: noch nicht eingerichtet (API-Key und Server-ID im Supabase-Vault, siehe Anleitung Schritt 10).": "Raid-Helper: not set up yet (API key and server ID in the Supabase Vault, see the guide, step 10).",
+  "– kein Raid-Helper-Event –": "– no Raid-Helper event –", "(hängt schon an einem Setup)": "(already linked to a setup)", "Event {0}": "Event {0}",
+  "Raid-Helper-Event": "Raid-Helper event", "nur Angemeldete": "signed up only", "Anmeldungen neu laden": "Reload sign-ups",
+  "Eingeteilt, aber abgemeldet": "Placed, but absent", "Eingeteilt, aber nur vorläufig/später": "Placed, but only tentative/late", "Eingeteilt, aber nicht angemeldet": "Placed, but not signed up", "Angemeldet, aber nicht eingeteilt": "Signed up, but not placed",
+  "Angemeldet ohne verknüpften Charakter ({0}):": "Signed up without a linked character ({0}):", "Zuletzt gesendet: {0} von {1}": "Last sent: {0} by {1}",
+  "seitdem geändert": "changed since", "Noch nicht an Raid-Helper gesendet.": "Not sent to Raid-Helper yet.", "Zum Senden erst veröffentlichen.": "Publish first to send it.",
+  "Sende …": "Sending …", "Erneut senden": "Send again", "An Raid-Helper senden": "Send to Raid-Helper", "Neu posten": "Post again",
+  "An Raid-Helper gesendet - Raid-Helper postet das Setup jetzt in Discord.": "Sent to Raid-Helper - Raid-Helper is posting the setup in Discord now.",
+  "An Raid-Helper gesendet - der Post in Discord aktualisiert sich.": "Sent to Raid-Helper - the post in Discord updates itself.",
+  "Ohne Premium: ein einfacher Post, der sich nicht selbst aktualisiert.": "Without Premium: a plain post that does not update itself.",
+  "Ohne Discord-Verknüpfung (Raid-Helper kennt sie nicht): {0}": "Without a Discord link (Raid-Helper doesn't know them): {0}",
+  "Ohne bekannte Klasse nicht gesendet: {0}": "Not sent (class unknown): {0}",
+  "Raid-Helper postet das Setup neu und erwähnt dabei alle Spieler noch einmal. Weiter?": "Raid-Helper will post the setup again and mention all players once more. Continue?",
+  "Mit „An Raid-Helper senden“ beim Setup kommt es in Discord.": "Use \"Send to Raid-Helper\" on the setup to post it in Discord.",
+  "Gespeichert, aber das Raid-Helper-Event ließ sich nicht verknüpfen: {0}": "Saved, but the Raid-Helper event could not be linked: {0}",
+  "Raid-Helper ({0}): {1}": "Raid-Helper ({0}): {1}", "Event": "event", "Events": "events", "Komposition": "composition", "Ankündigung": "announcement",
+  "Raid-Helper ist gerade nicht erreichbar ({0})": "Raid-Helper cannot be reached right now ({0})",
+  "Erst veröffentlichen, dann an Raid-Helper senden": "Publish first, then send to Raid-Helper", "Das Setup hängt noch an keinem Raid-Helper-Event": "The setup is not linked to a Raid-Helper event yet",
+  "Raid-Helper hat für dieses Event noch keine Komposition - bei Raid-Helper einmal das Comp-Tool des Events öffnen, dann noch einmal senden":
+    "Raid-Helper has no composition for this event yet - open the event's comp tool in Raid-Helper once, then send again",
+  "Raid-Helper lehnt den API-Key ab - in Discord mit /apikey prüfen und im Vault neu eintragen": "Raid-Helper rejects the API key - check it with /apikey in Discord and enter it in the Vault again",
+  "Raid-Helper ist noch nicht eingerichtet - in Supabase fehlt im Vault der API-Key (raidhelper_key)": "Raid-Helper is not set up yet - the API key (raidhelper_key) is missing in the Supabase Vault",
+  "Raid-Helper ist noch nicht eingerichtet - in Supabase fehlt im Vault die Server-ID (raidhelper_server)": "Raid-Helper is not set up yet - the server ID (raidhelper_server) is missing in the Supabase Vault",
+  "Das Raid-Helper-Event gehört zu einem anderen Discord-Server": "The Raid-Helper event belongs to a different Discord server", "ungültiges Raid-Helper-Event": "invalid Raid-Helper event",
+  "Raid-Helper hat keinen Kanal für das Event geliefert": "Raid-Helper did not return a channel for the event",
+  "Aus Raid-Helper übernehmen": "Import from Raid-Helper", "Übernehmen": "Import",
+  "Die Gruppen im Editor werden durch die Aufstellung aus dem Comp-Tool von Raid-Helper ersetzt. Wer jetzt eingeteilt ist und dort fehlt, kommt zurück in die Spielerliste.":
+    "The groups in the editor will be replaced by the line-up from the Raid-Helper comp tool. Anyone placed now who is missing there goes back to the player list.",
+  "{0} Spieler aus Raid-Helper übernommen - zum Behalten speichern oder veröffentlichen.": "{0} players imported from Raid-Helper - save or publish to keep them.",
+  "In der Komposition bei Raid-Helper steht niemand, den die Webapp einem Charakter zuordnen kann.": "Nobody in the Raid-Helper composition can be matched to a character.",
+  "Nicht übernommen (kein verknüpfter Charakter): {0}": "Not imported (no linked character): {0}",
+  "Raid-Helper hat für dieses Event noch keine Komposition": "Raid-Helper has no composition for this event yet"}); // Raid-Helper
 var LANG = (function () {
   try { var v = localStorage.getItem("nexloot-lang"); if (v === "de" || v === "en") return v; } catch (e) { /* egal */ }
   return /^de\b/i.test(navigator.language || "de") ? "de" : "en";
@@ -405,7 +730,7 @@ function T(de) {
   var t = (LANG === "en" && Object.prototype.hasOwnProperty.call(EN, de)) ? EN[de] : de, a = arguments;
   return t.replace(/\{(\d)\}/g, function (m, i) { return a[+i + 1]; });
 }
-var DEMO = /*DEMO_DATA*/{"rev": 214, "data": {"coins": {"Thoradin Eisenhand": 178, "Lyria Morgentau": 149, "Kael Schattenpfad": 185, "Brenna Sturmruf": 74, "Ilvara Sternfeuer": 103, "Gorrim Steinbart": 103, "Sylas Dornwald": 180, "Mira Nachtlied": 199, "Varek Aschenherz": -20, "Tessa Funkenschlag": 139, "Rurik Frosthammer": 203, "Elwyn Silberblatt": 131}, "history": [{"t": 1790262866, "name": "Lyria Morgentau", "id": 16922, "cost": 0, "key": "UP", "s": 1790262266}, {"t": 1790264166, "name": "Brenna Sturmruf", "id": 18814, "cost": 51, "key": "UPC", "s": 1790262266}, {"t": 1790265466, "name": "Lyria Morgentau", "id": 18870, "cost": 19, "key": "UPC", "s": 1790262266}, {"t": 1790266766, "name": "Tessa Funkenschlag", "id": 16922, "cost": 0, "key": "ROS", "s": 1790262266}, {"t": 1790268066, "name": "Brenna Sturmruf", "id": 16922, "cost": 26, "key": "UPC", "s": 1790262266}, {"t": 1790269366, "name": "Sylas Dornwald", "id": 16866, "cost": 62, "key": "UPC", "s": 1790262266}, {"t": 1790276666, "name": "*", "id": 0, "cost": -50, "key": "CG", "why": "12 Spieler: Raid-Teilnahme", "p": ["Brenna Sturmruf", "Elwyn Silberblatt", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"], "s": 1790262266}, {"t": 1790280266, "name": "*", "id": 0, "cost": 0, "key": "V", "why": "-10%"}, {"t": 1790867666, "name": "Tessa Funkenschlag", "id": 18563, "cost": 0, "key": "UP", "s": 1790867066}, {"t": 1790868966, "name": "Brenna Sturmruf", "id": 16866, "cost": 36, "key": "UPC", "s": 1790867066}, {"t": 1790870266, "name": "Tessa Funkenschlag", "id": 18814, "cost": 0, "key": "UP", "s": 1790867066}, {"t": 1790871566, "name": "Gorrim Steinbart", "id": 17063, "cost": 0, "key": "OS", "s": 1790867066}, {"t": 1790872866, "name": "Tessa Funkenschlag", "id": 16866, "cost": 54, "key": "UPC", "s": 1790867066}, {"t": 1790874166, "name": "Gorrim Steinbart", "id": 18205, "cost": 0, "key": "UPC", "s": 1790867066}, {"t": 1790875466, "name": "Rurik Frosthammer", "id": 16922, "cost": 0, "key": "UPC", "s": 1790867066}, {"t": 1790881466, "name": "*", "id": 0, "cost": -50, "key": "CG", "why": "11 Spieler: Raid-Teilnahme", "p": ["Brenna Sturmruf", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"], "s": 1790867066}, {"t": 1790881467, "name": "*", "id": 0, "cost": -25, "key": "CG", "why": "1 Spieler (Ersatzbank): Raid-Teilnahme", "p": ["Elwyn Silberblatt"], "s": 1790867066}, {"t": 1790885066, "name": "*", "id": 0, "cost": 0, "key": "V", "why": "-10%"}, {"t": 1791472466, "name": "Rurik Frosthammer", "id": 18870, "cost": 0, "key": "UP", "s": 1791471866}, {"t": 1791473766, "name": "Rurik Frosthammer", "id": 16800, "cost": 0, "key": "UP", "s": 1791471866}, {"t": 1791475066, "name": "Gorrim Steinbart", "id": 18563, "cost": 59, "key": "UPC", "s": 1791471866}, {"t": 1791476366, "name": "Brenna Sturmruf", "id": 16922, "cost": 0, "key": "UP", "s": 1791471866}, {"t": 1791477666, "name": "Sylas Dornwald", "id": 16857, "cost": 0, "key": "UP", "s": 1791471866}, {"t": 1791478966, "name": "Kael Schattenpfad", "id": 18814, "cost": 0, "key": "UP", "s": 1791471866}, {"t": 1791480266, "name": "Ilvara Sternfeuer", "id": 16858, "cost": 0, "key": "UPC", "s": 1791471866}, {"t": 1791486266, "name": "*", "id": 0, "cost": -50, "key": "CG", "why": "10 Spieler: Raid-Teilnahme", "p": ["Elwyn Silberblatt", "Gorrim Steinbart", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"], "s": 1791471866}, {"t": 1791489866, "name": "*", "id": 0, "cost": 0, "key": "V", "why": "-10%"}, {"t": 1792003266, "name": "Varek Aschenherz", "id": 0, "cost": 178, "key": "C", "why": "Strafe: Item weggerollt und AFK"}, {"t": 1792004266, "name": "Mira Nachtlied", "id": 0, "cost": -15, "key": "C", "why": "Ersatz für verpassten Raid"}, {"t": 1792004966, "name": "Kael Schattenpfad", "id": 18821, "cost": 0, "key": "AUTO", "s": 1792004666}, {"t": 1792005266, "name": "Ilvara Sternfeuer", "id": 16922, "cost": 41, "key": "UPC", "s": 1792004666}, {"t": 1792005466, "name": "Sylas Dornwald", "id": 18205, "cost": 0, "key": "DE", "s": 1792004666}], "lastDecay": 1790193866, "sessions": [{"sid": 1790262266, "host": "Thoradin Eisenhand", "start": 1790262266, "stop": 1790273066, "name": "Geschmolzener Kern 24.09.", "at": 1790273066, "items": [{"id": 16922, "w": "Lyria Morgentau", "r": "Lyria Morgentau (Upgrade, 54)"}, {"id": 18814, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Nex-Coins, 111) - 51 Nex-Coins abgezogen"}, {"id": 18870, "w": "Lyria Morgentau", "r": "Lyria Morgentau (Nex-Coins, 114) - 19 Nex-Coins abgezogen"}, {"id": 16922, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Raid OS, 51)"}, {"id": 16922, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Nex-Coins, 70) - 26 Nex-Coins abgezogen"}, {"id": 16866, "w": "Sylas Dornwald", "r": "Sylas Dornwald (Nex-Coins, 199) - 62 Nex-Coins abgezogen"}], "members": ["Brenna Sturmruf", "Elwyn Silberblatt", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}, {"sid": 1790867066, "host": "Thoradin Eisenhand", "start": 1790867066, "stop": 1790877866, "name": "Onyxia + Kern 01.10.", "at": 1790877866, "items": [{"id": 18563, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Upgrade, 47)"}, {"id": 16866, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Nex-Coins, 105) - 36 Nex-Coins abgezogen"}, {"id": 18814, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Upgrade, 68)"}, {"id": 17063, "w": "Gorrim Steinbart", "r": "Gorrim Steinbart (OS/PvP, 58)"}, {"id": 16866, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Nex-Coins, 163) - 54 Nex-Coins abgezogen"}, {"id": 18205, "w": "Gorrim Steinbart", "r": "Gorrim Steinbart (Nex-Coins, 130)"}, {"id": 16922, "w": "Rurik Frosthammer", "r": "Rurik Frosthammer (Nex-Coins, 208)"}], "members": ["Brenna Sturmruf", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}, {"sid": 1791471866, "host": "Thoradin Eisenhand", "start": 1791471866, "stop": 1791482666, "name": "Geschmolzener Kern 08.10.", "at": 1791482666, "items": [{"id": 18870, "w": "Rurik Frosthammer", "r": "Rurik Frosthammer (Upgrade, 37)"}, {"id": 16800, "w": "Rurik Frosthammer", "r": "Rurik Frosthammer (Upgrade, 3)"}, {"id": 18563, "w": "Gorrim Steinbart", "r": "Gorrim Steinbart (Nex-Coins, 182) - 59 Nex-Coins abgezogen"}, {"id": 16922, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Upgrade, 17)"}, {"id": 16857, "w": "Sylas Dornwald", "r": "Sylas Dornwald (Upgrade, 64)"}, {"id": 18814, "w": "Kael Schattenpfad", "r": "Kael Schattenpfad (Upgrade, 52)"}, {"id": 16858, "w": "Ilvara Sternfeuer", "r": "Ilvara Sternfeuer (Nex-Coins, 186)"}], "members": ["Elwyn Silberblatt", "Gorrim Steinbart", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}, {"sid": 1792004666, "host": "Lyria Morgentau", "start": 1792004666, "name": "Pechschwingenhort", "at": 1792004666, "items": [{"id": 16922, "w": "Ilvara Sternfeuer", "r": "Ilvara Sternfeuer (Nex-Coins, 151) - 41 Nex-Coins abgezogen", "a": {"Ilvara Sternfeuer": "UPC", "Tessa Funkenschlag": "UPC", "Lyria Morgentau": "UP", "Kael Schattenpfad": "ROS", "Brenna Sturmruf": "TM", "Thoradin Eisenhand": "PASS"}, "ro": {"Ilvara Sternfeuer": [69, 82], "Tessa Funkenschlag": [41, 95]}, "nt": {"Ilvara Sternfeuer": "BiS", "Lyria Morgentau": "2er-Set"}}, {"id": 18205, "w": "Sylas Dornwald", "r": "Sylas Dornwald (zum Entzaubern)", "a": {"Sylas Dornwald": "PASS", "Mira Nachtlied": "PASS", "Gorrim Steinbart": "PASS", "Varek Aschenherz": "PASS"}}, {"id": 16829}], "members": ["Brenna Sturmruf", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}], "items": {"19019": {"n": "Donnerzorn, Gesegnete Klinge des Windsuchers", "q": 5}, "16922": {"n": "Haube der Transzendenz", "q": 4}, "18814": {"n": "Choker der Feuersglut", "q": 4}, "17076": {"n": "Bonereaver's Edge", "q": 4}, "16901": {"n": "Beinschützer des Sturms", "q": 4}, "18205": {"n": "Eskhandars Halsband", "q": 4}, "17204": {"n": "Auge von Sulfuras", "q": 5}, "16857": {"n": "Lederbeinlinge des Lichts", "q": 4}, "18821": {"n": "Rasiermesserscharfer Ring", "q": 4}, "16866": {"n": "Helm der Macht", "q": 4}, "18823": {"n": "Aged Core Leather Gloves", "q": 4}, "19136": {"n": "Mana Igniting Cord", "q": 4}, "16800": {"n": "Arkanistenstiefel", "q": 4}, "17069": {"n": "Striker's Mark", "q": 4}, "18563": {"n": "Bindungen des Windsuchers", "q": 5}, "17063": {"n": "Band des Akkumulators", "q": 4}, "16829": {"n": "Cenarische Stiefel", "q": 4}, "16858": {"n": "Gürtel der Lava", "q": 4}, "18870": {"n": "Helm der Lavaflut", "q": 4}, "18875": {"n": "Salamanderschuppenhose", "q": 4}}, "classes": {"Thoradin Eisenhand": "WARRIOR", "Lyria Morgentau": "PRIEST", "Kael Schattenpfad": "ROGUE", "Brenna Sturmruf": "SHAMAN", "Ilvara Sternfeuer": "MAGE", "Gorrim Steinbart": "PALADIN", "Sylas Dornwald": "DRUID", "Mira Nachtlied": "HUNTER", "Varek Aschenherz": "WARLOCK", "Tessa Funkenschlag": "MAGE", "Rurik Frosthammer": "WARRIOR", "Elwyn Silberblatt": "HUNTER"}}, "updated_at": "2026-10-14T19:49:26+00:00", "updated_by": "Thoradin Eisenhand", "guild": "Demo"}/*END_DEMO*/;
+var DEMO = /*DEMO_DATA*/{"rev": 214, "data": {"coins": {"Thoradin Eisenhand": 178, "Lyria Morgentau": 149, "Kael Schattenpfad": 185, "Brenna Sturmruf": 74, "Ilvara Sternfeuer": 103, "Gorrim Steinbart": 103, "Sylas Dornwald": 180, "Mira Nachtlied": 199, "Varek Aschenherz": -20, "Tessa Funkenschlag": 139, "Rurik Frosthammer": 203, "Elwyn Silberblatt": 131}, "history": [{"t": 1791814528, "name": "Lyria Morgentau", "id": 16922, "cost": 0, "key": "UP", "s": 1791813928}, {"t": 1791815828, "name": "Brenna Sturmruf", "id": 18814, "cost": 51, "key": "UPC", "s": 1791813928}, {"t": 1791817128, "name": "Lyria Morgentau", "id": 18870, "cost": 19, "key": "UPC", "s": 1791813928}, {"t": 1791818428, "name": "Tessa Funkenschlag", "id": 16922, "cost": 0, "key": "ROS", "s": 1791813928}, {"t": 1791819728, "name": "Brenna Sturmruf", "id": 16922, "cost": 26, "key": "UPC", "s": 1791813928}, {"t": 1791821028, "name": "Sylas Dornwald", "id": 16866, "cost": 62, "key": "UPC", "s": 1791813928}, {"t": 1791828328, "name": "*", "id": 0, "cost": -50, "key": "CG", "why": "12 Spieler: Raid-Teilnahme", "p": ["Brenna Sturmruf", "Elwyn Silberblatt", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"], "s": 1791813928}, {"t": 1791831928, "name": "*", "id": 0, "cost": 0, "key": "V", "why": "-10%"}, {"t": 1792419328, "name": "Tessa Funkenschlag", "id": 18563, "cost": 0, "key": "UP", "s": 1792418728}, {"t": 1792420628, "name": "Brenna Sturmruf", "id": 16866, "cost": 36, "key": "UPC", "s": 1792418728}, {"t": 1792421928, "name": "Tessa Funkenschlag", "id": 18814, "cost": 0, "key": "UP", "s": 1792418728}, {"t": 1792423228, "name": "Gorrim Steinbart", "id": 17063, "cost": 0, "key": "OS", "s": 1792418728}, {"t": 1792424528, "name": "Tessa Funkenschlag", "id": 16866, "cost": 54, "key": "UPC", "s": 1792418728}, {"t": 1792425828, "name": "Gorrim Steinbart", "id": 18205, "cost": 0, "key": "UPC", "s": 1792418728}, {"t": 1792427128, "name": "Rurik Frosthammer", "id": 16922, "cost": 0, "key": "UPC", "s": 1792418728}, {"t": 1792433128, "name": "*", "id": 0, "cost": -50, "key": "CG", "why": "11 Spieler: Raid-Teilnahme", "p": ["Brenna Sturmruf", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"], "s": 1792418728}, {"t": 1792433129, "name": "*", "id": 0, "cost": -25, "key": "CG", "why": "1 Spieler (Ersatzbank): Raid-Teilnahme", "p": ["Elwyn Silberblatt"], "s": 1792418728}, {"t": 1792436728, "name": "*", "id": 0, "cost": 0, "key": "V", "why": "-10%"}, {"t": 1793024128, "name": "Rurik Frosthammer", "id": 18870, "cost": 0, "key": "UP", "s": 1793023528}, {"t": 1793025428, "name": "Rurik Frosthammer", "id": 16800, "cost": 0, "key": "UP", "s": 1793023528}, {"t": 1793026728, "name": "Gorrim Steinbart", "id": 18563, "cost": 59, "key": "UPC", "s": 1793023528}, {"t": 1793028028, "name": "Brenna Sturmruf", "id": 16922, "cost": 0, "key": "UP", "s": 1793023528}, {"t": 1793029328, "name": "Sylas Dornwald", "id": 16857, "cost": 0, "key": "UP", "s": 1793023528}, {"t": 1793030628, "name": "Kael Schattenpfad", "id": 18814, "cost": 0, "key": "UP", "s": 1793023528}, {"t": 1793031928, "name": "Ilvara Sternfeuer", "id": 16858, "cost": 0, "key": "UPC", "s": 1793023528}, {"t": 1793037928, "name": "*", "id": 0, "cost": -50, "key": "CG", "why": "10 Spieler: Raid-Teilnahme", "p": ["Elwyn Silberblatt", "Gorrim Steinbart", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"], "s": 1793023528}, {"t": 1793041528, "name": "*", "id": 0, "cost": 0, "key": "V", "why": "-10%"}, {"t": 1793554928, "name": "Varek Aschenherz", "id": 0, "cost": 178, "key": "C", "why": "Strafe: Item weggerollt und AFK"}, {"t": 1793555928, "name": "Mira Nachtlied", "id": 0, "cost": -15, "key": "C", "why": "Ersatz für verpassten Raid"}, {"t": 1793556628, "name": "Kael Schattenpfad", "id": 18821, "cost": 0, "key": "AUTO", "s": 1793556328}, {"t": 1793556928, "name": "Ilvara Sternfeuer", "id": 16922, "cost": 41, "key": "UPC", "s": 1793556328}, {"t": 1793557128, "name": "Sylas Dornwald", "id": 18205, "cost": 0, "key": "DE", "s": 1793556328}], "lastDecay": 1791745528, "sessions": [{"sid": 1791813928, "host": "Thoradin Eisenhand", "start": 1791813928, "stop": 1791824728, "name": "Geschmolzener Kern 12.10.", "at": 1791824728, "items": [{"id": 16922, "w": "Lyria Morgentau", "r": "Lyria Morgentau (Upgrade, 54)"}, {"id": 18814, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Nex-Coins, 111) - 51 Nex-Coins abgezogen"}, {"id": 18870, "w": "Lyria Morgentau", "r": "Lyria Morgentau (Nex-Coins, 114) - 19 Nex-Coins abgezogen"}, {"id": 16922, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Raid OS, 51)"}, {"id": 16922, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Nex-Coins, 70) - 26 Nex-Coins abgezogen"}, {"id": 16866, "w": "Sylas Dornwald", "r": "Sylas Dornwald (Nex-Coins, 199) - 62 Nex-Coins abgezogen"}], "members": ["Brenna Sturmruf", "Elwyn Silberblatt", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}, {"sid": 1792418728, "host": "Thoradin Eisenhand", "start": 1792418728, "stop": 1792429528, "name": "Onyxia + Kern 19.10.", "at": 1792429528, "items": [{"id": 18563, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Upgrade, 47)"}, {"id": 16866, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Nex-Coins, 105) - 36 Nex-Coins abgezogen"}, {"id": 18814, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Upgrade, 68)"}, {"id": 17063, "w": "Gorrim Steinbart", "r": "Gorrim Steinbart (OS/PvP, 58)"}, {"id": 16866, "w": "Tessa Funkenschlag", "r": "Tessa Funkenschlag (Nex-Coins, 163) - 54 Nex-Coins abgezogen"}, {"id": 18205, "w": "Gorrim Steinbart", "r": "Gorrim Steinbart (Nex-Coins, 130)"}, {"id": 16922, "w": "Rurik Frosthammer", "r": "Rurik Frosthammer (Nex-Coins, 208)"}], "members": ["Brenna Sturmruf", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}, {"sid": 1793023528, "host": "Thoradin Eisenhand", "start": 1793023528, "stop": 1793034328, "name": "Geschmolzener Kern 26.10.", "at": 1793034328, "items": [{"id": 18870, "w": "Rurik Frosthammer", "r": "Rurik Frosthammer (Upgrade, 37)"}, {"id": 16800, "w": "Rurik Frosthammer", "r": "Rurik Frosthammer (Upgrade, 3)"}, {"id": 18563, "w": "Gorrim Steinbart", "r": "Gorrim Steinbart (Nex-Coins, 182) - 59 Nex-Coins abgezogen"}, {"id": 16922, "w": "Brenna Sturmruf", "r": "Brenna Sturmruf (Upgrade, 17)"}, {"id": 16857, "w": "Sylas Dornwald", "r": "Sylas Dornwald (Upgrade, 64)"}, {"id": 18814, "w": "Kael Schattenpfad", "r": "Kael Schattenpfad (Upgrade, 52)"}, {"id": 16858, "w": "Ilvara Sternfeuer", "r": "Ilvara Sternfeuer (Nex-Coins, 186)"}], "members": ["Elwyn Silberblatt", "Gorrim Steinbart", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Rurik Frosthammer", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}, {"sid": 1793556328, "host": "Lyria Morgentau", "start": 1793556328, "name": "Pechschwingenhort", "at": 1793556328, "items": [{"id": 16922, "w": "Ilvara Sternfeuer", "r": "Ilvara Sternfeuer (Nex-Coins, 151) - 41 Nex-Coins abgezogen", "a": {"Ilvara Sternfeuer": "UPC", "Tessa Funkenschlag": "UPC", "Lyria Morgentau": "UP", "Kael Schattenpfad": "ROS", "Brenna Sturmruf": "TM", "Thoradin Eisenhand": "PASS"}, "ro": {"Ilvara Sternfeuer": [69, 82], "Tessa Funkenschlag": [41, 95]}, "nt": {"Ilvara Sternfeuer": "BiS", "Lyria Morgentau": "2er-Set"}}, {"id": 18205, "w": "Sylas Dornwald", "r": "Sylas Dornwald (zum Entzaubern)", "a": {"Sylas Dornwald": "PASS", "Mira Nachtlied": "PASS", "Gorrim Steinbart": "PASS", "Varek Aschenherz": "PASS"}}, {"id": 16829}], "members": ["Brenna Sturmruf", "Gorrim Steinbart", "Ilvara Sternfeuer", "Kael Schattenpfad", "Lyria Morgentau", "Mira Nachtlied", "Sylas Dornwald", "Tessa Funkenschlag", "Thoradin Eisenhand", "Varek Aschenherz"]}], "items": {"19019": {"n": "Donnerzorn, Gesegnete Klinge des Windsuchers", "q": 5}, "16922": {"n": "Haube der Transzendenz", "q": 4}, "18814": {"n": "Choker der Feuersglut", "q": 4}, "17076": {"n": "Bonereaver's Edge", "q": 4}, "16901": {"n": "Beinschützer des Sturms", "q": 4}, "18205": {"n": "Eskhandars Halsband", "q": 4}, "17204": {"n": "Auge von Sulfuras", "q": 5}, "16857": {"n": "Lederbeinlinge des Lichts", "q": 4}, "18821": {"n": "Rasiermesserscharfer Ring", "q": 4}, "16866": {"n": "Helm der Macht", "q": 4}, "18823": {"n": "Aged Core Leather Gloves", "q": 4}, "19136": {"n": "Mana Igniting Cord", "q": 4}, "16800": {"n": "Arkanistenstiefel", "q": 4}, "17069": {"n": "Striker's Mark", "q": 4}, "18563": {"n": "Bindungen des Windsuchers", "q": 5}, "17063": {"n": "Band des Akkumulators", "q": 4}, "16829": {"n": "Cenarische Stiefel", "q": 4}, "16858": {"n": "Gürtel der Lava", "q": 4}, "18870": {"n": "Helm der Lavaflut", "q": 4}, "18875": {"n": "Salamanderschuppenhose", "q": 4}}, "classes": {"Thoradin Eisenhand": "WARRIOR", "Lyria Morgentau": "PRIEST", "Kael Schattenpfad": "ROGUE", "Brenna Sturmruf": "SHAMAN", "Ilvara Sternfeuer": "MAGE", "Gorrim Steinbart": "PALADIN", "Sylas Dornwald": "DRUID", "Mira Nachtlied": "HUNTER", "Varek Aschenherz": "WARLOCK", "Tessa Funkenschlag": "MAGE", "Rurik Frosthammer": "WARRIOR", "Elwyn Silberblatt": "HUNTER"}}, "updated_at": "2026-11-01T18:50:28+00:00", "updated_by": "Thoradin Eisenhand", "guild": "Demo", "members": [{"name": "Thoradin Eisenhand", "level": 60, "class": "WARRIOR", "rank": "Gildenmeister", "rank_index": 0, "online": true, "last_seen": 1793559628, "role": "T", "talents": "5/11/35", "spec": "Schutz", "profs": {"BS": 300, "MIN": 300, "FA": 300}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Lyria Morgentau", "level": 60, "class": "PRIEST", "rank": "Offizier", "rank_index": 1, "online": true, "last_seen": 1793559628, "role": "H", "talents": "21/30/0", "spec": "Heilig", "profs": {"TAI": 285, "ENC": 300, "COO": 150}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Kael Schattenpfad", "level": 58, "class": "ROGUE", "rank": "Raider", "rank_index": 2, "online": false, "last_seen": 1793548828, "role": "D", "talents": "15/31/5", "spec": "Kampf", "profs": {"SKI": 240, "LW": 255}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Brenna Sturmruf", "level": 60, "class": "SHAMAN", "rank": "Raider", "rank_index": 2, "online": true, "last_seen": 1793559628, "role": "H", "talents": "0/5/46", "spec": "Wiederherstellung", "profs": {"HER": 300, "ALC": 300, "FIS": 225}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Ilvara Sternfeuer", "level": 60, "class": "MAGE", "rank": "Raider", "rank_index": 2, "online": false, "last_seen": 1793466028, "role": null, "talents": "10/0/41", "spec": "Frost", "profs": {"TAI": 300, "ENC": 270}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Gorrim Steinbart", "level": 57, "class": "PALADIN", "rank": "Raider", "rank_index": 2, "online": false, "last_seen": 1793541628, "role": "T", "talents": "10/41/0", "spec": "Schutz", "profs": {"MIN": 270, "ENG": 260}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Sylas Dornwald", "level": 52, "class": "DRUID", "rank": "Mitglied", "rank_index": 3, "online": false, "last_seen": 1793379628, "role": null, "talents": null, "spec": null, "profs": null, "info_at": null, "seen_at": 1793559628}, {"name": "Mira Nachtlied", "level": 41, "class": "HUNTER", "rank": "Mitglied", "rank_index": 3, "online": false, "last_seen": 1793556028, "role": "D", "talents": "5/26/0", "spec": "Treffsicherheit", "profs": {"SKI": 180, "LW": 175, "COO": 120}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Varek Aschenherz", "level": 60, "class": "WARLOCK", "rank": "Raider", "rank_index": 2, "online": false, "last_seen": 1793293228, "role": "D", "talents": "17/0/34", "spec": "Zerstörung", "profs": {"TAI": 300, "ENC": 290}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Tessa Funkenschlag", "level": 33, "class": "MAGE", "rank": "Neuling", "rank_index": 4, "online": false, "last_seen": 1793552428, "role": null, "talents": null, "spec": null, "profs": null, "info_at": null, "seen_at": 1793559628}, {"name": "Rurik Frosthammer", "level": 26, "class": "WARRIOR", "rank": "Neuling", "rank_index": 4, "online": false, "last_seen": 1792839628, "role": "D", "talents": "0/12/0", "spec": "Furor", "profs": {"MIN": 110, "BS": 95}, "info_at": 1793552728, "seen_at": 1793559628}, {"name": "Elwyn Silberblatt", "level": 60, "class": "HUNTER", "rank": "Raider", "rank_index": 2, "online": true, "last_seen": 1793559628, "role": "D", "talents": "0/21/30", "spec": "Überleben", "profs": {"HER": 300, "ALC": 280, "FA": 300}, "info_at": 1793552728, "seen_at": 1793559628}], "milestones": [{"id": 108, "name": "Rurik Frosthammer", "kind": "level", "value": 25, "place": null, "class": "WARRIOR", "at": 1793542648}, {"id": 107, "name": "Tessa Funkenschlag", "kind": "level", "value": 25, "place": null, "class": "MAGE", "at": 1793482168}, {"id": 106, "name": "Mira Nachtlied", "kind": "level", "value": 40, "place": null, "class": "HUNTER", "at": 1793438968}, {"id": 105, "name": "Elwyn Silberblatt", "kind": "level", "value": 60, "place": 6, "class": "HUNTER", "at": 1793361208}, {"id": 104, "name": "Ilvara Sternfeuer", "kind": "level", "value": 60, "place": 5, "class": "MAGE", "at": 1793179768}, {"id": 103, "name": "Varek Aschenherz", "kind": "level", "value": 60, "place": 4, "class": "WARLOCK", "at": 1793032888}, {"id": 102, "name": "Brenna Sturmruf", "kind": "level", "value": 60, "place": 3, "class": "SHAMAN", "at": 1792877368}, {"id": 101, "name": "Lyria Morgentau", "kind": "level", "value": 60, "place": 2, "class": "PRIEST", "at": 1792816888}, {"id": 100, "name": "Thoradin Eisenhand", "kind": "level", "value": 60, "place": 1, "class": "WARRIOR", "at": 1792765048}], "users": [{"discord_id": "100000000000000001", "name": "Thoradin", "role": "officer", "login": true}, {"discord_id": "100000000000000002", "name": "Lyria", "role": "officer", "login": true}, {"discord_id": "100000000000000003", "name": "Kael", "role": "member", "login": true}, {"discord_id": "100000000000000004", "name": "Brenna", "role": "member", "login": true}, {"discord_id": "100000000000000005", "name": "Ilvi", "role": "member", "login": false}, {"discord_id": "100000000000000006", "name": "Gorrim", "role": "member", "login": true}], "links": [{"char": "Thoradin Eisenhand", "discord_id": "100000000000000001", "fav": true, "set_by": "self"}, {"char": "Rurik Frosthammer", "discord_id": "100000000000000001", "fav": false, "set_by": "self"}, {"char": "Lyria Morgentau", "discord_id": "100000000000000002", "fav": true, "set_by": "self"}, {"char": "Kael Schattenpfad", "discord_id": "100000000000000003", "fav": true, "set_by": "self"}, {"char": "Brenna Sturmruf", "discord_id": "100000000000000004", "fav": true, "set_by": "self"}, {"char": "Ilvara Sternfeuer", "discord_id": "100000000000000005", "fav": true, "set_by": "Thoradin"}, {"char": "Gorrim Steinbart", "discord_id": "100000000000000006", "fav": true, "set_by": "self"}], "setups": [{"id": 1, "title": "Geschmolzener Kern", "size": 20, "in_days": 2, "hour": 20, "status": "published", "rev": 3, "updated_by": "Thoradin", "discord": true, "data": {"groups": [["Thoradin Eisenhand", "Gorrim Steinbart", "Lyria Morgentau", "Kael Schattenpfad", "Varek Aschenherz"], ["Brenna Sturmruf", "Ilvara Sternfeuer", "Elwyn Silberblatt", "Mira Nachtlied"], ["Sylas Dornwald"], []], "bench": ["Tessa Funkenschlag"], "out": ["Rurik Frosthammer"], "notes": {}}}, {"id": 2, "title": "Onyxia", "size": 40, "in_days": 5, "hour": 20, "status": "draft", "rev": 1, "updated_by": "Lyria", "data": {"groups": [["Lyria Morgentau", "Brenna Sturmruf"], [], [], [], [], [], [], []], "bench": [], "out": [], "notes": {}}}, {"id": 10, "title": "Geschmolzener Kern", "size": 20, "starts_at": 1791813028, "status": "published", "rev": 2, "updated_by": "Thoradin", "discord": true, "data": {"groups": [["Thoradin Eisenhand", "Gorrim Steinbart", "Lyria Morgentau", "Kael Schattenpfad", "Varek Aschenherz"], ["Brenna Sturmruf", "Ilvara Sternfeuer", "Mira Nachtlied", "Sylas Dornwald", "Elwyn Silberblatt"], [], []], "bench": ["Tessa Funkenschlag"], "out": ["Rurik Frosthammer"], "notes": {}}}, {"id": 11, "title": "Onyxia + Kern", "size": 20, "starts_at": 1792417828, "status": "published", "rev": 2, "updated_by": "Thoradin", "discord": true, "data": {"groups": [["Thoradin Eisenhand", "Gorrim Steinbart", "Lyria Morgentau", "Kael Schattenpfad", "Varek Aschenherz"], ["Brenna Sturmruf", "Ilvara Sternfeuer", "Mira Nachtlied", "Sylas Dornwald", "Elwyn Silberblatt"], [], []], "bench": ["Tessa Funkenschlag"], "out": ["Rurik Frosthammer"], "notes": {}}}, {"id": 12, "title": "Geschmolzener Kern", "size": 20, "starts_at": 1793022628, "status": "published", "rev": 2, "updated_by": "Thoradin", "discord": true, "data": {"groups": [["Thoradin Eisenhand", "Gorrim Steinbart", "Lyria Morgentau", "Kael Schattenpfad", "Varek Aschenherz"], ["Brenna Sturmruf", "Ilvara Sternfeuer", "Mira Nachtlied", "Sylas Dornwald", "Elwyn Silberblatt"], [], []], "bench": ["Tessa Funkenschlag"], "out": ["Rurik Frosthammer"], "notes": {}}}]}/*END_DEMO*/;
 var CFG = window.NEXLOOT_CONFIG || null;
 var CONFIGURED = !!(CFG && CFG.supabaseUrl && CFG.anonKey && !/DEIN-PROJEKT|XXXX/.test(CFG.supabaseUrl) && !/^DEIN-/.test(CFG.anonKey));
 
@@ -538,7 +863,8 @@ function ago(ms) {
   if (s < 60) return T("gerade eben");
   if (s < 3600) return T("vor {0} Min.", Math.round(s / 60));
   if (s < 86400) return T("vor {0} Std.", Math.round(s / 3600));
-  return T("vor {0} Tagen", Math.round(s / 86400));
+  var dd = Math.round(s / 86400);
+  return dd === 1 ? T("vor 1 Tag") : T("vor {0} Tagen", dd);
 }
 function list(v) { if (!v) return []; if (Array.isArray(v)) return v; return Object.keys(v).sort(function (a, b) { return a - b; }).map(function (k) { return v[k]; }); }
 function classOf(name) { var c = state.data && state.data.classes && state.data.classes[name]; return c && CLASS_COLORS[c]; }
@@ -579,6 +905,9 @@ function inSession(h, e) {
 
 // ---------------------------------------------------------------- Laden
 function load() {
+  loadGuild();
+  if (auth.s && !auth.me && !auth.loading) loadMe(); // z. B. nach einer Netzwerkpause
+  if (!setups.missing) loadSetups(); // ohne nexloot_konten.sql nicht jede Minute neu fragen
   if (!CONFIGURED) {
     state.demo = true;
     if (DEMO) { state.data = DEMO.data; state.rev = DEMO.rev; state.updatedAt = DEMO.updated_at; state.updatedBy = DEMO.updated_by; state.fetchedAt = Date.now(); }
@@ -1078,7 +1407,8 @@ function openPlayer(n) {
 
 function render() {
   applyChoices(state.data);
-  renderState(); renderFacts(); fillSelects(); renderCoins(); renderHist(); renderSess(); renderStats(); renderPlayer();
+  renderState(); renderFacts(); fillSelects(); renderCoins(); renderHist(); renderSess(); renderStats(); renderPlayer(); renderGuild();
+  renderAuth(); renderTabsVis(); renderMine(); renderRaids(); renderAdmin();
   whRefresh();
 }
 // Wowhead-Script (falls geladen): neue Item-Links mit Icon versehen
@@ -1091,11 +1421,1235 @@ function showTab(tab) {
   if (tab === "spieler" && !ui.sel) tab = "rangliste";
   ui.tab = tab;
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.setAttribute("aria-selected", b.dataset.tab === (tab === "spieler" ? "rangliste" : tab) ? "true" : "false"); });
-  ["rangliste", "historie", "sessions", "statistik", "regeln", "spieler"].forEach(function (t) { $("p-" + t).hidden = t !== tab; });
+  if (tab === "verwaltung" && !isOfficer()) { if (auth.s && !auth.me) ui.want = "verwaltung"; tab = "rangliste"; ui.tab = tab; Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.setAttribute("aria-selected", b.dataset.tab === tab ? "true" : "false"); }); }
+  ["rangliste", "historie", "sessions", "statistik", "gilde", "raids", "verwaltung", "regeln", "spieler"].forEach(function (t) { $("p-" + t).hidden = t !== tab; });
+  if (tab === "raids") { loadSetups(); if (!past.loaded) loadPast(false); }
+  if (tab === "verwaltung") loadAdmin();
   if (tab === "statistik" && state.data) renderCurve(state.data, periodStart());
   if (tab === "spieler") { renderPlayer(); window.scrollTo(0, 0); }
   whRefresh();
   try { history.replaceState(null, "", "#" + (tab === "spieler" ? "spieler=" + encodeURIComponent(ui.sel) : tab)); } catch (e) { /* egal */ }
+}
+
+// ---------------------------------------------------------------- Gilde (NexLoot 0.29, Companion 1.7)
+// Die Companion-App eines Offiziers laedt die Gildenliste hoch (nexloot_members); Level 25/40/60 stehen in nexloot_milestones.
+var guild = { members: null, milestones: null, error: null, missing: false, at: 0 };
+var gui = { q: "", cls: "", role: "", level: "", prof: "", online: false, sort: "level", dir: -1 };
+var CLASS_NAMES = { WARRIOR: ["Krieger", "Warrior"], PALADIN: ["Paladin", "Paladin"], HUNTER: ["Jäger", "Hunter"], ROGUE: ["Schurke", "Rogue"],
+  PRIEST: ["Priester", "Priest"], SHAMAN: ["Schamane", "Shaman"], MAGE: ["Magier", "Mage"], WARLOCK: ["Hexenmeister", "Warlock"], DRUID: ["Druide", "Druid"],
+  DEATHKNIGHT: ["Todesritter", "Death Knight"], MONK: ["Mönch", "Monk"], DEMONHUNTER: ["Dämonenjäger", "Demon Hunter"], EVOKER: ["Rufer", "Evoker"] };
+var PROF_NAMES = { ALC: ["Alchemie", "Alchemy"], BS: ["Schmiedekunst", "Blacksmithing"], ENC: ["Verzauberkunst", "Enchanting"], ENG: ["Ingenieurskunst", "Engineering"],
+  HER: ["Kräuterkunde", "Herbalism"], JC: ["Juwelierskunst", "Jewelcrafting"], INS: ["Inschriftenkunde", "Inscription"], LW: ["Lederverarbeitung", "Leatherworking"],
+  MIN: ["Bergbau", "Mining"], SKI: ["Kürschnerei", "Skinning"], TAI: ["Schneiderei", "Tailoring"], COO: ["Kochkunst", "Cooking"], FA: ["Erste Hilfe", "First Aid"], FIS: ["Angeln", "Fishing"] };
+var PROF_ORDER = ["ALC", "BS", "ENC", "ENG", "HER", "JC", "INS", "LW", "MIN", "SKI", "TAI", "COO", "FA", "FIS"];
+var PROF_SEC = { COO: true, FA: true, FIS: true };
+var PURE_DPS = { MAGE: true, WARLOCK: true, ROGUE: true, HUNTER: true }; // ohne Angabe: sicher Schaden
+var ROLES = { T: { label: "Tank", c: "#59a6ff" }, H: { label: "Heiler", c: "#4ccf6a" }, D: { label: "Schaden", c: "#ff6464" } };
+var MAX_LEVEL = 60;
+function className(c) { var n = CLASS_NAMES[c]; return n ? n[LANG === "en" ? 1 : 0] : (c || ""); }
+function profName(k) { var n = PROF_NAMES[k]; return n ? n[LANG === "en" ? 1 : 0] : k; }
+function roleOf(m) { if (ROLES[m.role]) return { r: m.role, guess: false }; if (PURE_DPS[m.class]) return { r: "D", guess: true }; return null; }
+function roleCell(m) {
+  var x = roleOf(m); if (!x) return '<span class="muted">–</span>';
+  return '<span class="role' + (x.guess ? " guess" : "") + '" style="--c:' + ROLES[x.r].c + '"' + (x.guess ? ' title="' + esc(T("Nicht angegeben - aus der Klasse")) + '"' : "") + ">" + esc(T(ROLES[x.r].label)) + "</span>";
+}
+function mwho(m) { var c = CLASS_COLORS[m.class]; return '<span class="who"' + (c ? ' style="--cls:' + c + '"' : "") + ">" + esc(m.name) + "</span>"; }
+function profList(m) {
+  var p = m.profs || {};
+  return PROF_ORDER.filter(function (k) { return p[k] != null; }).map(function (k) { return { k: k, v: +p[k] || 0 }; });
+}
+function profCell(m) {
+  var l = profList(m); if (!l.length) return '<span class="muted">–</span>';
+  return '<span class="profs">' + l.map(function (x) { return '<span' + (PROF_SEC[x.k] ? ' class="sec"' : "") + ">" + esc(profName(x.k)) + " " + fmtNum.format(x.v) + "</span>"; }).join(" · ") + "</span>";
+}
+function specCell(m) {
+  if (!m.talents && !m.spec) return '<span class="muted">–</span>';
+  return '<span class="spec">' + (m.spec ? esc(m.spec) + " " : "") + '<span class="muted">' + esc(m.talents || "") + "</span></span>";
+}
+function onlineNow(m) { return !!m.online && guild.at - (+m.seen_at || 0) < 120 && Date.now() / 1000 - guild.at < 900; }
+function seenOf(m) { return m.online ? (+m.seen_at || +m.last_seen || 0) : (+m.last_seen || 0); }
+function seenCell(m) {
+  if (onlineNow(m)) return '<span class="on">' + esc(T("online")) + "</span>";
+  var t = seenOf(m);
+  return t ? '<span class="date" title="' + esc(when(t)) + '">' + esc(ago(t * 1000)) + "</span>" : '<span class="muted">–</span>';
+}
+function loadGuild() {
+  if (!CONFIGURED) {
+    guild.members = (DEMO && DEMO.members) || []; guild.milestones = (DEMO && DEMO.milestones) || []; guild.missing = false; guild.error = null;
+    return Promise.resolve();
+  }
+  var base = CFG.supabaseUrl.replace(/\/+$/, "") + "/rest/v1/", g = "guild=eq." + encodeURIComponent(CFG.guild || "Nex");
+  var headers = { apikey: CFG.anonKey, Accept: "application/json" };
+  if (/^eyJ/.test(CFG.anonKey)) headers.Authorization = "Bearer " + CFG.anonKey;
+  function get(path) {
+    return fetch(base + path, { headers: headers, cache: "no-store" }).then(function (r) {
+      if (r.ok) return r.json();
+      return r.text().then(function (t) {
+        var e = new Error("HTTP " + r.status + " " + t.slice(0, 160));
+        e.missing = (r.status === 404 || r.status === 400) && /nexloot_(members|milestones)|does not exist|schema cache|42P01|PGRST20[25]/.test(t);
+        throw e;
+      });
+    });
+  }
+  return Promise.all([
+    get("nexloot_members?" + g + "&in_guild=eq.true&select=name,level,class,rank,rank_index,online,last_seen,role,talents,spec,profs,info_at,seen_at&order=level.desc,name.asc"),
+    get("nexloot_milestones?" + g + "&select=id,name,kind,value,place,class,at&order=at.desc,id.desc&limit=40")
+  ]).then(function (res) {
+    guild.members = res[0] || []; guild.milestones = res[1] || []; guild.error = null; guild.missing = false; renderGuild(); renderMine(); renderRaids(); renderAdmin(); renderDlg();
+  }).catch(function (e) { guild.missing = !!e.missing; guild.error = e.missing ? null : (e.message || String(e)); renderGuild(); });
+}
+function fillGuildSelects(ms) {
+  function opts(el, first, list, cur) {
+    el.innerHTML = '<option value="">' + esc(first) + "</option>" + list.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === cur ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("");
+    if (cur && !list.some(function (o) { return o[0] === cur; })) el.value = "";
+  }
+  var cls = {}, prof = {};
+  ms.forEach(function (m) { if (m.class) cls[m.class] = true; profList(m).forEach(function (x) { prof[x.k] = true; }); });
+  opts($("gClass"), T("Alle Klassen"), Object.keys(cls).map(function (c) { return [c, className(c)]; }).sort(function (a, b) { return a[1].localeCompare(b[1], LOC); }), gui.cls);
+  opts($("gRole"), T("Alle Rollen"), [["T", T("Tank")], ["H", T("Heiler")], ["D", T("Schaden")], ["-", T("ohne Angabe")]], gui.role);
+  opts($("gLevel"), T("Alle Level"), [["60", T("Level {0}", MAX_LEVEL)], ["55", T("ab Level {0}", 55)], ["40", T("ab Level {0}", 40)], ["25", T("ab Level {0}", 25)]], gui.level);
+  opts($("gProf"), T("Alle Berufe"), PROF_ORDER.filter(function (k) { return prof[k]; }).map(function (k) { return [k, profName(k)]; }), gui.prof);
+}
+function renderGuildSum(ms) {
+  var box = $("gSum"), now = Date.now() / 1000;
+  var max = ms.filter(function (m) { return +m.level >= MAX_LEVEL; }), soon = ms.filter(function (m) { return +m.level >= 55 && +m.level < MAX_LEVEL; });
+  var on = ms.filter(onlineNow).length;
+  var rc = { T: 0, H: 0, D: 0, "?": 0 };
+  max.forEach(function (m) { var x = roleOf(m); rc[x ? x.r : "?"]++; });
+  var cc = {};
+  max.forEach(function (m) { var c = m.class || "?"; cc[c] = (cc[c] || 0) + 1; });
+  var cl = Object.keys(cc).sort(function (a, b) { return (cc[b] - cc[a]) || className(a).localeCompare(className(b), LOC); });
+  var pills = ["T", "H", "D"].map(function (r) { return '<span class="rp" style="--c:' + ROLES[r].c + '">' + esc(T(ROLES[r].label)) + " <b>" + rc[r] + "</b></span>"; }).join("") +
+    (rc["?"] ? '<span class="rp">' + esc(T("ohne Angabe")) + " <b>" + rc["?"] + "</b></span>" : "");
+  box.innerHTML =
+    '<div><div class="k">' + esc(T("Mitglieder")) + '</div><div class="v">' + fmtNum.format(ms.length) + (on ? " <small>· " + esc(T("{0} online", on)) + "</small>" : "") + "</div></div>" +
+    '<div><div class="k">' + esc(T("Level {0}", MAX_LEVEL)) + '</div><div class="v">' + fmtNum.format(max.length) + (soon.length ? " <small>· " + esc(T("{0} bei 55–59", soon.length)) + "</small>" : "") + "</div></div>" +
+    '<div><div class="k">' + esc(T("Rollen bei Level {0}", MAX_LEVEL)) + '</div><div class="rl">' + pills + "</div></div>" +
+    '<div><div class="k">' + esc(T("Klassen bei Level {0}", MAX_LEVEL)) + "</div>" + (max.length
+      ? '<div class="cbar">' + cl.map(function (c) { return '<i style="width:' + (cc[c] * 100 / max.length) + "%;background:" + (CLASS_COLORS[c] || "var(--muted)") + '" title="' + esc(className(c) + ": " + cc[c]) + '"></i>'; }).join("") + "</div>" +
+        '<div class="legend">' + cl.slice(0, 6).map(function (c) { return "<span><i style=\"background:" + (CLASS_COLORS[c] || "var(--muted)") + '"></i>' + esc(className(c)) + "<b>" + cc[c] + "</b></span>"; }).join("") + "</div>"
+      : '<div class="v"><small>' + esc(T("noch niemand")) + "</small></div>") + "</div>";
+  box.hidden = false;
+}
+function renderGuild() {
+  var body = $("bGuild"); if (!body) return;
+  var all = guild.members || [];
+  $("nGuild").textContent = all.length ? fmtNum.format(all.length) : "";
+  guild.at = all.reduce(function (x, m) { return Math.max(x, +m.seen_at || 0); }, 0);
+  var note = $("gNote");
+  if (!all.length) {
+    var msg = guild.missing ? T("Die Gildenübersicht ist noch nicht eingerichtet: In Supabase einmal nexloot_gilde.sql ausführen (siehe Anleitung).")
+      : guild.error ? T("Die Gildenliste lädt gerade nicht ({0}).", guild.error)
+      : T("Noch keine Gildenliste. Sie kommt, sobald sich ein Offizier mit NexLoot 0.29 und der Companion-App 1.7 ausloggt (oder /reload).");
+    body.innerHTML = '<tr><td colspan="7" class="empty">' + esc(msg) + "</td></tr>";
+    $("gSum").hidden = true; note.hidden = true; $("cGuild").textContent = "";
+    $("gMsBlock").hidden = !(guild.milestones && guild.milestones.length);
+    renderMilestones();
+    return;
+  }
+  fillGuildSelects(all);
+  renderGuildSum(all);
+  var q = gui.q.trim().toLowerCase();
+  var rows = all.filter(function (m) {
+    if (gui.cls && m.class !== gui.cls) return false;
+    if (gui.role) { var x = roleOf(m); if (gui.role === "-" ? (x && !x.guess) : !(x && x.r === gui.role)) return false; }
+    if (gui.level && +m.level < +gui.level) return false;
+    if (gui.prof && !(m.profs && m.profs[gui.prof] != null)) return false;
+    if (gui.online && !onlineNow(m)) return false;
+    if (q) {
+      var hay = [m.name, className(m.class), m.class, m.rank, m.spec].concat(profList(m).map(function (x) { return profName(x.k); })).join(" ").toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  var key = { name: function (m) { return m.name; }, level: function (m) { return +m.level || 0; }, seen: function (m) { return onlineNow(m) ? Infinity : seenOf(m); } }[gui.sort] || function (m) { return +m.level || 0; };
+  rows.sort(function (a, b) {
+    var x = key(a), y = key(b), c = typeof x === "string" ? x.localeCompare(y, LOC) : (x - y);
+    return (c * gui.dir) || a.name.localeCompare(b.name, LOC);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#gHead th[data-sort]"), function (th) {
+    if (th.dataset.sort === gui.sort) th.setAttribute("aria-sort", gui.dir > 0 ? "ascending" : "descending"); else th.removeAttribute("aria-sort");
+  });
+  body.innerHTML = rows.length ? rows.map(function (m) {
+    var pl = profList(m);
+    return "<tr><td>" + mwho(m) + (m.rank ? '<div class="sub">' + esc(m.rank) + "</div>" : "") +
+      (pl.length ? '<div class="sub show-s">' + pl.map(function (x) { return esc(profName(x.k)) + " " + fmtNum.format(x.v); }).join(" · ") + "</div>" : "") +
+      '</td><td class="num"><span class="lv' + (+m.level >= MAX_LEVEL ? " max" : "") + '">' + (+m.level || "–") + '</span></td><td class="hide-s">' + esc(className(m.class)) +
+      "</td><td>" + roleCell(m) + '</td><td class="hide-s">' + specCell(m) + '</td><td class="hide-s">' + profCell(m) + "</td><td>" + seenCell(m) + "</td></tr>";
+  }).join("") : '<tr><td colspan="7" class="empty">' + esc(T("Niemand passt zu den Filtern.")) + "</td></tr>";
+  $("cGuild").textContent = (rows.length === all.length ? T("{0} Mitglieder", fmtNum.format(all.length)) : T("{0} von {1}", fmtNum.format(rows.length), fmtNum.format(all.length))) +
+    (guild.at ? " · " + T("aktualisiert {0}", ago(guild.at * 1000)) : "");
+  var withInfo = all.filter(function (m) { return m.info_at; }).length;
+  if (guild.error) { note.hidden = false; note.textContent = T("Die Gildenliste lädt gerade nicht ({0}). Angezeigt wird der zuletzt geladene Stand.", guild.error); }
+  else if (withInfo < all.length) { note.hidden = false; note.textContent = T("Rolle, Talente und Berufe gibt es von {0} der {1} Mitglieder - von allen mit NexLoot ab 0.29 (Rolle: im Spiel unter Optionen → Meine Rolle im Raid).", withInfo, all.length); }
+  else note.hidden = true;
+  renderMilestones();
+}
+function renderMilestones() {
+  var l = guild.milestones || [], box = $("gMs");
+  $("gMsBlock").hidden = !l.length;
+  box.innerHTML = l.map(function (x) {
+    var v = +x.value, extra = "";
+    if (v >= MAX_LEVEL && x.place) extra = x.place === 1 ? T("der erste 60er der Gilde") : T("Platz {0} in der Gilde", x.place);
+    else if (v === 40) extra = T("Dual-Spec möglich");
+    return '<li><span class="date">' + esc(when(x.at)) + "</span>" + mwho(x) + ' <span class="mv' + (v >= MAX_LEVEL ? " max" : "") + '">' + esc(T("Level {0}", v)) + "</span>" +
+      (extra ? ' <span class="muted">' + esc(extra) + "</span>" : "") + "</li>";
+  }).join("");
+}
+
+// ---------------------------------------------------------------- Anmelden mit Discord (Supabase Auth, nexloot_konten.sql)
+// Ohne Zusatzbibliothek: Supabase leitet nach dem Discord-Login mit #access_token=... zurueck. Das Token liegt im
+// Browser (localStorage) und wird vor Ablauf erneuert. Ohne config.js (Beispieldaten) gibt es einen Demo-Login.
+var AUTH_KEY = "nexloot-auth";
+var auth = { s: null, me: null, error: null, refreshing: null, loading: false };
+var setups = { list: null, error: null, missing: false };
+var past = { list: [], more: false, loaded: false, loading: false, error: null, missing: false, open: {} }; // vergangene Raids
+var SETUPS_MISSING = /nexloot_setups|schema cache|does not exist|PGRST20/;
+var adm = { data: null, error: null, busy: false };
+var emo = { draft: {}, dirty: false, paste: "", unmatched: [] }; // Klassen-Symbole fuer Discord (Verwaltung)
+// Raid-Helper (nexloot_raidhelper.sql): Events des Servers, Anmeldungen je Event; off: "missing" = SQL fehlt, "nokey" = nicht eingerichtet
+var rh = { events: null, linked: {}, error: null, off: null, loading: false, at: 0, ev: {}, sending: null };
+function authBase() { return CFG.supabaseUrl.replace(/\/+$/, ""); }
+function authLoad() {
+  try { var v = JSON.parse(localStorage.getItem(AUTH_KEY) || "null"); if (v && v.access_token && v.refresh_token) auth.s = v; } catch (e) { /* egal */ }
+}
+function authSave() {
+  try { if (auth.s) localStorage.setItem(AUTH_KEY, JSON.stringify(auth.s)); else localStorage.removeItem(AUTH_KEY); } catch (e) { /* egal */ }
+}
+// Rueckkehr vom Discord-Login: Tokens aus der Adresse holen und gleich wieder aus der Adresse entfernen
+function authFromHash() {
+  var h = (location.hash || "").replace(/^#/, ""), q = (location.search || "").replace(/^\?/, "");
+  var inHash = /(^|&)(access_token|error_description)=/.test(h), inQuery = !inHash && /(^|&)error_description=/.test(q);
+  if (!inHash && !inQuery) return;
+  var p = new URLSearchParams(inHash ? h : q);
+  if (p.get("error") === "access_denied") auth.error = T("abgebrochen");
+  else if (p.get("error_description")) auth.error = p.get("error_description").replace(/\+/g, " ");
+  else if (p.get("access_token") && p.get("refresh_token")) {
+    var exp = +p.get("expires_at") || Math.floor(Date.now() / 1000) + (+p.get("expires_in") || 3600);
+    auth.s = { access_token: p.get("access_token"), refresh_token: p.get("refresh_token"), expires_at: exp };
+    authSave();
+  }
+  var back = ""; try { back = sessionStorage.getItem("nexloot-back") || ""; sessionStorage.removeItem("nexloot-back"); } catch (e) { /* egal */ }
+  try { history.replaceState(null, "", location.pathname + (inQuery ? "" : location.search) + (back ? "#" + back : "")); } catch (e) { location.hash = back; }
+}
+function login() {
+  if (!CONFIGURED) { demoLogin(); return; }
+  try { sessionStorage.setItem("nexloot-back", ui.tab === "spieler" ? "rangliste" : ui.tab); } catch (e) { /* egal */ }
+  location.href = authBase() + "/auth/v1/authorize?provider=discord&redirect_to=" + encodeURIComponent(location.origin + location.pathname + location.search);
+}
+function logout() {
+  var t = auth.s && auth.s.access_token;
+  auth.s = null; auth.me = null; adm.data = null; authSave();
+  if (t && CONFIGURED) fetch(authBase() + "/auth/v1/logout", { method: "POST", headers: { apikey: CFG.anonKey, Authorization: "Bearer " + t } }).catch(function () { /* egal */ });
+  if (ui.tab === "verwaltung") showTab("rangliste");
+  loadSetups();
+  render();
+}
+// gueltiges Token (falls noetig erneuert) -> Promise<string|null>
+function token() {
+  if (!auth.s) return Promise.resolve(null);
+  if (!CONFIGURED) return Promise.resolve(auth.s.access_token);
+  if (auth.s.expires_at - Date.now() / 1000 > 60) return Promise.resolve(auth.s.access_token);
+  if (auth.refreshing) return auth.refreshing;
+  auth.refreshing = fetch(authBase() + "/auth/v1/token?grant_type=refresh_token", { method: "POST",
+    headers: { apikey: CFG.anonKey, "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: auth.s.refresh_token }) })
+    .then(function (r) { if (!r.ok) throw Object.assign(new Error("refresh " + r.status), { status: r.status }); return r.json(); })
+    .then(function (j) {
+      auth.s = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600) };
+      authSave(); return auth.s.access_token;
+    })
+    .catch(function (e) {
+      if (e && e.status >= 400 && e.status < 500) { auth.s = null; auth.me = null; authSave(); return null; } // Anmeldung ungueltig/abgelaufen
+      return auth.s ? auth.s.access_token : null; // kein Netz: Anmeldung behalten, beim naechsten Mal wieder versuchen
+    })
+    .then(function (t) { auth.refreshing = null; return t; });
+  return auth.refreshing;
+}
+// Funktion in Supabase aufrufen (mit Anmeldung, falls vorhanden). Fehler: Text ohne "NexLoot: "
+function rpc(name, args, needLogin) {
+  if (!CONFIGURED) return demoRpc(name, args || {});
+  return token().then(function (t) {
+    if (needLogin && !t) throw new Error(T("Bitte mit Discord anmelden."));
+    var h = { apikey: CFG.anonKey, Accept: "application/json", "Content-Type": "application/json" };
+    if (t) h.Authorization = "Bearer " + t; else if (/^eyJ/.test(CFG.anonKey)) h.Authorization = "Bearer " + CFG.anonKey;
+    return fetch(authBase() + "/rest/v1/rpc/" + name, { method: "POST", headers: h, body: JSON.stringify(args || {}), cache: "no-store" });
+  }).then(function (r) {
+    return r.text().then(function (txt) {
+      var j = null; try { j = txt ? JSON.parse(txt) : null; } catch (e) { /* egal */ }
+      if (!r.ok) {
+        var m = (j && (j.message || j.msg)) || ("HTTP " + r.status);
+        if (r.status === 401 && auth.s) { auth.s = null; auth.me = null; authSave(); }
+        throw new Error(srvMsg(String(m).replace(/^NexLoot:\s*/, "")));
+      }
+      return j;
+    });
+  });
+}
+// Fehlertexte aus der Datenbank sind deutsch -> fuer EN uebersetzen
+function srvMsg(m) {
+  var x;
+  if ((x = /^Charakter (.+) ist nicht in der Gilde$/.exec(m))) return T("Charakter {0} ist nicht in der Gilde", x[1]);
+  if ((x = /^(.+) ist schon mit einem anderen Discord-Konto verknüpft - bitte an einen Offizier wenden$/.exec(m))) return T("{0} ist schon mit einem anderen Discord-Konto verknüpft - bitte an einen Offizier wenden", x[1]);
+  if ((x = /^(.+) hat das Setup inzwischen geändert - bitte neu laden$/.exec(m))) return T("{0} hat das Setup inzwischen geändert - bitte neu laden", x[1]);
+  if ((x = /^Raid-Helper \(([^)]+)\): (.+)$/.exec(m))) return T("Raid-Helper ({0}): {1}", T(x[1]), x[2]);
+  if ((x = /^Raid-Helper ist gerade nicht erreichbar \((.+)\)$/.exec(m))) return T("Raid-Helper ist gerade nicht erreichbar ({0})", x[1]);
+  return T(m);
+}
+function G() { return (CFG && CFG.guild) || "Nex"; }
+function isOfficer() { return !!(auth.me && auth.me.role === "officer"); }
+function myChars() { return (auth.me && auth.me.chars) || []; }
+function favChar() { var c = myChars(); for (var i = 0; i < c.length; i++) if (c[i].fav) return c[i].char; return c.length ? c[0].char : null; }
+function loadMe() {
+  if (!auth.s) { auth.me = null; return Promise.resolve(); }
+  auth.loading = true;
+  return rpc("nexloot_me", { p_guild: G() }, true).then(function (me) { auth.me = me; auth.error = null; })
+    .catch(function (e) { if (auth.s) auth.error = e.message; }) // Anmeldung abgelaufen (nicht erneuerbar): einfach abgemeldet
+    .then(function () {
+      auth.loading = false; renderAuth(); renderMine(); renderTabsVis();
+      var want = ui.want; ui.want = null;
+      if (isOfficer()) { loadSetups(); if (want === "verwaltung") showTab("verwaltung"); else if (ui.tab === "verwaltung") loadAdmin(); }
+    });
+}
+function loadSetups() {
+  return rpc("nexloot_setups", { p_guild: G() }).then(function (l) { setups.list = l || []; setups.error = null; setups.missing = false; })
+    .catch(function (e) { setups.error = e.message; setups.missing = SETUPS_MISSING.test(e.message); if (!setups.list) setups.list = []; })
+    .then(function () { renderTabsVis(); renderRaids(); renderMine(); });
+}
+function loadAdmin() {
+  if (!isOfficer()) return Promise.resolve();
+  return rpc("nexloot_admin", { p_guild: G() }, true).then(function (d) { adm.data = d; adm.error = null; })
+    .catch(function (e) { adm.error = e.message; }).then(renderAdmin);
+}
+// innerHTML nur setzen, wenn sich etwas geaendert hat (sonst gehen beim Auto-Aktualisieren Eingaben und Fokus verloren)
+function putHtml(el, html) { if (!el || el._nx === html) return false; el._nx = html; el.innerHTML = html; return true; }
+// dasselbe, aber ein Eingabefeld mit Fokus behaelt Fokus, Cursor und angefangenen Text
+function putHtmlKeep(el, html) {
+  var a = document.activeElement, id = a && a.id && el && el.contains(a) ? a.id : null, sel = null, val = id && a.tagName === "INPUT" ? a.value : null;
+  try { if (id && a.selectionStart != null) sel = [a.selectionStart, a.selectionEnd]; } catch (e) { /* egal */ }
+  if (!putHtml(el, html)) return false;
+  var f = id && document.getElementById(id);
+  if (f) {
+    if (val != null && f.value !== val) f.value = val;
+    f.focus();
+    try { if (sel) f.setSelectionRange(sel[0], sel[1]); } catch (e) { /* egal */ }
+  }
+  return true;
+}
+// Ist die Discord-Anmeldung in Supabase eingeschaltet? (Sonst keinen Knopf zeigen, der auf eine Fehlerseite fuehrt.)
+var authAvail = null;
+function authCheck() {
+  if (!CONFIGURED) { authAvail = true; return; }
+  fetch(authBase() + "/auth/v1/settings", { headers: { apikey: CFG.anonKey }, cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) { authAvail = j && j.external ? !!j.external.discord : true; })
+    .catch(function () { authAvail = true; })
+    .then(renderAuth);
+}
+function flash(msg, bad) {
+  var f = $("flash"); if (!f) return;
+  f.textContent = msg; f.className = "flash" + (bad ? " bad" : ""); f.hidden = false;
+  clearTimeout(flash.t); flash.t = setTimeout(function () { f.hidden = true; }, bad ? 7000 : 3500);
+}
+
+// ---------------------------------------------------------------- Demo (ohne config.js): alles nur im Browser
+var demoDb = null;
+function demoInit() {
+  if (demoDb) return demoDb;
+  var d = DEMO || {};
+  demoDb = { users: JSON.parse(JSON.stringify(d.users || [])), links: JSON.parse(JSON.stringify(d.links || [])), setups: JSON.parse(JSON.stringify(d.setups || [])), next: 100 };
+  demoDb.setups.forEach(function (s) { // Datum relativ zu heute, damit die Beispiel-Raids nicht veralten
+    if (s.in_days == null) return;
+    var t = new Date(); t.setDate(t.getDate() + s.in_days); t.setHours(s.hour || 20, 0, 0, 0);
+    s.starts_at = Math.floor(t.getTime() / 1000); delete s.in_days; delete s.hour;
+  });
+  return demoDb;
+}
+// Demo: Raid-Helper-Events passend zu den Beispiel-Setups (gleicher Termin), dazu Anmeldungen
+function demoRh() {
+  var db = demoInit();
+  if (db.rh) return db.rh;
+  var names = (guild.members || []).map(function (m) { return m.name; }), i = 0;
+  db.rh = db.setups.filter(function (s) { return s.starts_at && s.status === "published"; }).map(function (s) {
+    var su = names.slice(0, 14).map(function (n, k) { return { name: n.split(" ")[0], did: String(100 + k), cls: "", spec: "", kind: k === 3 ? "absent" : k === 9 ? "tentative" : "ok", pos: k + 1, chars: [n] }; });
+    su.push({ name: "Neuling", did: "999", cls: "Mage", spec: "Frost", kind: "ok", pos: 15, chars: [] });
+    return { id: String(1300000000000000000 + (++i) * 1000), title: s.title, start: s.starts_at, signups: su };
+  });
+  return db.rh;
+}
+function demoLogin() {
+  demoInit();
+  auth.s = { access_token: "demo", refresh_token: "demo", expires_at: 4102444800 };
+  loadMe().then(loadSetups);
+}
+function demoMe() {
+  var db = demoInit(), me = db.users[0];
+  return { discord_id: me.discord_id, name: me.name, avatar: "", role: me.role,
+    chars: db.links.filter(function (l) { return l.discord_id === me.discord_id; }).sort(function (a, b) { return (b.fav - a.fav) || a.char.localeCompare(b.char); })
+      .map(function (l) { return { char: l.char, fav: l.fav, set_by: l.set_by }; }) };
+}
+function demoRpc(name, a) {
+  var db = demoInit(), me = db.users[0];
+  return new Promise(function (ok, no) {
+    function fail(m) { no(new Error(m)); }
+    function known(c) { return (guild.members || []).some(function (m) { return m.name === c; }) || !!(state.data && state.data.coins && c in state.data.coins); }
+    function admin() {
+      return { users: db.users.slice().sort(function (x, y) { return (x.name || x.discord_id).toLowerCase().localeCompare((y.name || y.discord_id).toLowerCase()); }),
+        links: db.links.slice().sort(function (x, y) { return x.char.localeCompare(y.char); }), emojis: JSON.parse(JSON.stringify(db.emojis || {})) };
+    }
+    function setFav(did, c) { db.links.forEach(function (l) { if (l.discord_id === did) l.fav = (l.char === c); }); }
+    var off = me.role === "officer";
+    switch (name) {
+      case "nexloot_me": return ok(demoMe());
+      case "nexloot_claim": {
+        var ow = db.links.filter(function (l) { return l.char === a.p_char; })[0];
+        if (!known(a.p_char)) return fail(T("Charakter {0} ist nicht in der Gilde", a.p_char));
+        if (ow && ow.discord_id !== me.discord_id) return fail(T("{0} ist schon mit einem anderen Discord-Konto verknüpft - bitte an einen Offizier wenden", a.p_char));
+        var mine = db.links.filter(function (l) { return l.discord_id === me.discord_id; }).length;
+        if (!ow) db.links.push({ char: a.p_char, discord_id: me.discord_id, fav: false, set_by: "self" });
+        if (a.p_fav || mine === 0) setFav(me.discord_id, a.p_char);
+        return ok(demoMe());
+      }
+      case "nexloot_unclaim": {
+        var was = db.links.filter(function (l) { return l.char === a.p_char && l.discord_id === me.discord_id; })[0];
+        db.links = db.links.filter(function (l) { return l !== was; });
+        if (was && was.fav) { var rest = db.links.filter(function (l) { return l.discord_id === me.discord_id; }); if (rest.length) rest[0].fav = true; }
+        return ok(demoMe());
+      }
+      case "nexloot_unlock": me.role = "officer"; return ok(demoMe());
+      case "nexloot_admin": return off ? ok(admin()) : fail(T("nur für Offiziere"));
+      case "nexloot_link_set": {
+        if (!off) return fail(T("nur für Offiziere"));
+        db.links = db.links.filter(function (l) { return l.char !== a.p_char; });
+        if (a.p_discord_id) {
+          if (!/^\d{15,22}$/.test(a.p_discord_id)) return fail(T("ungültige Discord-ID (nur Ziffern)"));
+          if (!db.users.some(function (u) { return u.discord_id === a.p_discord_id; })) db.users.push({ discord_id: a.p_discord_id, name: a.p_discord_name || null, role: "member", login: false });
+          db.links.push({ char: a.p_char, discord_id: a.p_discord_id, fav: !!a.p_fav, set_by: me.name });
+          if (a.p_fav || db.links.filter(function (l) { return l.discord_id === a.p_discord_id; }).length === 1) setFav(a.p_discord_id, a.p_char);
+        }
+        return ok(admin());
+      }
+      case "nexloot_role_set": {
+        if (!off) return fail(T("nur für Offiziere"));
+        if (a.p_discord_id === me.discord_id) return fail(T("die eigene Rolle kann man nicht ändern"));
+        db.users.forEach(function (u) { if (u.discord_id === a.p_discord_id) u.role = a.p_role; });
+        return ok(admin());
+      }
+      case "nexloot_setups": return ok(db.setups.filter(function (s) { return s.status === "published" || (auth.s && off); }));
+      case "nexloot_setup_save": {
+        if (!off) return fail(T("nur für Offiziere"));
+        var s = a.p_id ? db.setups.filter(function (x) { return x.id === a.p_id; })[0] : null;
+        if (a.p_id && !s) return fail(T("Setup gibt es nicht mehr"));
+        if (!s) { s = { id: ++db.next, rev: 0 }; db.setups.push(s); }
+        s.title = a.p_title; s.size = a.p_size; s.starts_at = a.p_starts_at; s.status = a.p_status; s.data = a.p_data; s.rev++; s.updated_by = me.name;
+        s.discord = false; // (in der Demo postet keine Companion-App)
+        s.updated_at = new Date().toISOString();
+        db.setups.sort(function (x, y) { return (x.starts_at || 0) - (y.starts_at || 0); });
+        return ok(JSON.parse(JSON.stringify(s)));
+      }
+      case "nexloot_setup_delete": db.setups = db.setups.filter(function (x) { return x.id !== a.p_id; }); return ok({ ok: true });
+      case "nexloot_setups_past": {
+        var lim = Date.now() / 1000 - 6 * 3600, n = a.p_limit || 10;
+        var pl = db.setups.filter(function (x) { return x.status === "published" && x.starts_at && x.starts_at < lim && (!a.p_before || x.starts_at < a.p_before); })
+          .sort(function (x, y) { return y.starts_at - x.starts_at; });
+        return ok({ list: JSON.parse(JSON.stringify(pl.slice(0, n))), more: pl.length > n });
+      }
+      case "nexloot_dc_emojis_set": {
+        if (!off) return fail(T("nur für Offiziere"));
+        var em = {};
+        for (var ek in (a.p_map || {})) {
+          var ev = String(a.p_map[ek] || "").trim();
+          if (!EMO_NAME[ek]) return fail("unbekannte Klasse " + ek);
+          if (ev && !EMO_CODE.test(ev)) return fail("ungültiges Symbol bei " + ek);
+          if (ev) em[ek] = ev;
+        }
+        db.emojis = em;
+        return ok({ ok: true, emojis: JSON.parse(JSON.stringify(em)), redo: 0 });
+      }
+      case "nexloot_rh_events": {
+        if (!off) return fail(T("nur für Offiziere"));
+        var nowS = Date.now() / 1000, lk = {};
+        db.setups.forEach(function (x) { if (x.rh_event) lk[x.rh_event] = x.id; });
+        return ok({ events: demoRh().filter(function (e) { return e.start > nowS - 6 * 3600; }).map(function (e) {
+          return { id: e.id, title: e.title, start: e.start, channel: "1", channelName: "raid-anmeldung", signups: e.signups.length }; }), linked: lk });
+      }
+      case "nexloot_rh_event": {
+        if (!off) return fail(T("nur für Offiziere"));
+        var re = demoRh().filter(function (e) { return e.id === a.p_event; })[0];
+        if (!re) return fail(T("Raid-Helper ({0}): {1}", T("Event"), "unknown event"));
+        return ok({ id: re.id, title: re.title, start: re.start, channel: "1", channelName: "raid-anmeldung", signups: re.signups });
+      }
+      case "nexloot_rh_comp": {
+        // Demo: im Comp-Tool stehen die Angemeldeten der Reihe nach in 5er-Gruppen (wer keinen Charakter hat, bleibt ohne)
+        if (!off) return fail(T("nur für Offiziere"));
+        var rc = demoRh().filter(function (e) { return e.id === a.p_event; })[0];
+        if (!rc) return fail(T("Raid-Helper hat für dieses Event noch keine Komposition"));
+        var csl = rc.signups.filter(function (x) { return x.kind === "ok"; }).map(function (x, k) {
+          var o = { group: Math.floor(k / 5) + 1, slot: (k % 5) + 1, name: x.name, cls: x.cls, spec: x.spec, confirmed: "unconfirmed", linked: true };
+          if (x.chars[0]) o.char = x.chars[0];
+          return o;
+        });
+        return ok({ title: rc.title, groupCount: Math.max(1, Math.ceil(csl.length / 5)), slotCount: 5, slots: csl });
+      }
+      case "nexloot_setup_rh_link": {
+        if (!off) return fail(T("nur für Offiziere"));
+        var rs0 = db.setups.filter(function (x) { return x.id === a.p_id; })[0];
+        if (!rs0) return fail(T("Setup gibt es nicht mehr"));
+        if (rs0.rh_event !== (a.p_event || null)) { rs0.rh_sent_at = null; rs0.rh_sent_rev = null; rs0.rh_ann = null; }
+        rs0.rh_event = a.p_event || null;
+        return ok({ ok: true, id: rs0.id, rh_event: rs0.rh_event });
+      }
+      case "nexloot_rh_send": {
+        if (!off) return fail(T("nur für Offiziere"));
+        var rs1 = db.setups.filter(function (x) { return x.id === a.p_id; })[0];
+        if (!rs1) return fail(T("Setup gibt es nicht mehr"));
+        if (rs1.status !== "published") return fail(T("Erst veröffentlichen, dann an Raid-Helper senden"));
+        if (!rs1.rh_event) return fail(T("Das Setup hängt noch an keinem Raid-Helper-Event"));
+        var posted = !!a.p_new_post || rs1.rh_ann !== rs1.rh_event;
+        rs1.rh_ann = rs1.rh_event; rs1.rh_sent_at = Math.floor(Date.now() / 1000); rs1.rh_sent_rev = rs1.rev; rs1.rh_sent_by = me.name;
+        return ok({ ok: true, posted: posted, premium: true, slots: 0, nouser: [], nosignup: [] });
+      }
+      case "nexloot_setup_session": {
+        if (!off) return fail(T("nur für Offiziere"));
+        var ss = db.setups.filter(function (x) { return x.id === a.p_id; })[0];
+        if (!ss) return fail(T("Setup gibt es nicht mehr"));
+        ss.sess = a.p_sess || null;
+        return ok({ ok: true, id: ss.id, sess: ss.sess });
+      }
+    }
+    fail("?");
+  });
+}
+
+// ---------------------------------------------------------------- Kopf: Anmelden / angemeldet
+function avatarImg(u, cls) {
+  var src = u && u.avatar && /^https:\/\//.test(u.avatar) ? u.avatar : "";
+  var ch = esc(((u && u.name) || "?").slice(0, 1).toUpperCase());
+  return src ? '<img class="' + cls + '" src="' + esc(src) + '" alt="" referrerpolicy="no-referrer">' : '<span class="' + cls + ' ph" aria-hidden="true">' + ch + "</span>";
+}
+var DISCORD_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.4 18.4 0 0 0-5.6 0L8.6 3a19.7 19.7 0 0 0-4.9 1.5C.6 9.1-.3 13.6.1 18.1A19.9 19.9 0 0 0 6.2 21l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.8 19.8 0 0 0 6.1-2.9c.5-5.2-.8-9.7-3.6-13.7ZM8.5 15.4c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm7 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></svg>';
+function renderAuth() {
+  var box = $("authBox"); if (!box) return;
+  if (!auth.s) {
+    putHtml(box, authAvail ? '<button class="btn discord" type="button" id="loginBtn">' + DISCORD_ICON + "<span>" + esc(T("Mit Discord anmelden")) + "</span></button>" : "");
+    return;
+  }
+  var me = auth.me;
+  var label = me ? esc(me.name || "Discord") : esc(T("Anmeldung …"));
+  putHtml(box, '<details class="usermenu"><summary class="btn">' + avatarImg(me, "av") + "<span>" + label + "</span>" +
+    (isOfficer() ? '<span class="tag">' + esc(T("Offizier")) + "</span>" : "") + "</summary><div class=\"menu\">" +
+    (me ? '<button type="button" data-act="chars">' + esc(T("Meine Charaktere …")) + "</button>" : "") +
+    (me && !isOfficer() ? '<button type="button" data-act="unlock">' + esc(T("Als Offizier freischalten …")) + "</button>" : "") +
+    '<button type="button" data-act="logout">' + esc(T("Abmelden")) + "</button></div></details>");
+}
+function renderTabsVis() {
+  var t = $("t-verwaltung"); if (t) t.hidden = !isOfficer();
+  var r = $("t-raids"); if (r) r.hidden = setups.missing && ui.tab !== "raids"; // ohne nexloot_konten.sql kein Reiter „Raids“
+  if (!isOfficer() && ui.tab === "verwaltung") showTab("rangliste");
+}
+
+// ---------------------------------------------------------------- Startseite: Mein Charakter
+function charFacts(n) {
+  var d = state.data || {}, coins = d.coins || {}, hist = list(d.history);
+  var order = Object.keys(coins).sort(function (a, b) { return (coins[b] - coins[a]) || a.localeCompare(b, "de"); });
+  var place = order.indexOf(n) + 1;
+  var wins = hist.filter(function (h) { return isWin(h) && h.name === n; }).sort(function (a, b) { return b.t - a.t; });
+  var sess = list(d.sessions).filter(function (e) { return memberList(e).length > 0; });
+  var att = sess.filter(function (e) { return memberList(e).indexOf(n) >= 0; }).length;
+  var m = (guild.members || []).filter(function (x) { return x.name === n; })[0] || null;
+  return { coins: n in coins ? +coins[n] || 0 : null, place: place, total: order.length, wins: wins, att: att, sess: sess.length, m: m };
+}
+// naechster veroeffentlichter Raid, in dem der Charakter steht (oder der naechste ueberhaupt)
+function nextRaidFor(n) {
+  var now = Date.now() / 1000, l = (setups.list || []).filter(function (s) { return s.status === "published" && (!s.starts_at || s.starts_at > now - 6 * 3600); });
+  l.sort(function (a, b) { return (a.starts_at || 9e9) - (b.starts_at || 9e9); });
+  for (var i = 0; i < l.length; i++) { var w = whereIn(l[i], n); if (w) return { s: l[i], w: w }; }
+  return l.length ? { s: l[0], w: null } : null;
+}
+function whereIn(s, n) {
+  var d = s.data || {}, g = d.groups || [];
+  for (var i = 0; i < g.length; i++) if ((g[i] || []).indexOf(n) >= 0) return { k: "g", i: i };
+  if ((d.bench || []).indexOf(n) >= 0) return { k: "bench" };
+  if ((d.out || []).indexOf(n) >= 0) return { k: "out" };
+  return null;
+}
+function whereText(w) {
+  if (!w) return T("noch nicht eingeteilt");
+  return w.k === "g" ? T("Gruppe {0}", w.i + 1) : w.k === "bench" ? T("Ersatzbank") : T("nicht dabei");
+}
+function raidWhen(s) { return s.starts_at ? fmtDay.format(new Date(s.starts_at * 1000)) + ", " + new Intl.DateTimeFormat(LOC, { hour: "2-digit", minute: "2-digit" }).format(new Date(s.starts_at * 1000)) : ""; }
+function renderMine() {
+  var box = $("mine"); if (!box) return;
+  if (!auth.s || !auth.me) {
+    box.hidden = !auth.s && !auth.error;
+    putHtml(box, auth.error ? '<p class="mine-msg bad">' + esc(T("Anmeldung hat nicht geklappt: {0}", auth.error)) + "</p>"
+      : auth.s ? '<p class="mine-msg">' + esc(T("Anmeldung …")) + "</p>"
+      : '<p class="mine-msg">' + esc(T("Melde dich mit Discord an, dann siehst du hier deinen Charakter.")) + "</p>");
+    if (!auth.s && !auth.error) box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  var n = favChar(), c = myChars();
+  if (!n) {
+    putHtmlKeep(box, '<div class="mine-head"><h2>' + esc(T("Welcher Charakter bist du?")) + '</h2></div><p class="mine-msg">' +
+      esc(T("Wähle deinen Charakter aus der Gildenliste. Twinks kannst du danach dazunehmen.")) + "</p>" + claimForm("claimA"));
+    return;
+  }
+  var f = charFacts(n), m = f.m, cls = (m && m.class) || (state.data && state.data.classes && state.data.classes[n]);
+  var col = CLASS_COLORS[cls];
+  var last = f.wins[0], nr = nextRaidFor(n);
+  var sw = c.length > 1 ? '<select id="mineSwitch" aria-label="' + esc(T("Charakter wechseln")) + '">' + c.map(function (x) {
+    return '<option value="' + esc(x.char) + '"' + (x.char === n ? " selected" : "") + ">" + esc(x.char) + (x.fav ? " ★" : "") + "</option>"; }).join("") + "</select>" : "";
+  var html = '<div class="mine-head"><h2><span class="who" style="' + (col ? "--cls:" + col : "") + '">' + esc(n) + "</span></h2>" +
+    (m ? '<span class="muted">' + esc(T("Level {0}", m.level)) + " · " + esc(className(cls)) + (roleOf(m) ? " · " + esc(T(ROLES[roleOf(m).r].label)) : "") + "</span>" : "") +
+    '<span class="mine-act">' + sw + '<button class="btn" type="button" data-act="player">' + esc(T("Meine Seite")) + '</button><button class="btn" type="button" data-act="chars">' +
+    esc(T("Charaktere …")) + "</button></span></div>" +
+    '<div class="pfacts mine-facts">' +
+    '<div><div class="k">' + esc(T("Nex-Coins")) + '</div><div class="v">' + (f.coins == null ? "–" : coinVal(f.coins)) +
+      (f.place ? " <small>" + esc(T("Platz {0} von {1}", f.place, f.total)) + "</small>" : "") + "</div></div>" +
+    '<div><div class="k">' + esc(T("Items")) + '</div><div class="v">' + fmtNum.format(f.wins.length) +
+      (last ? " <small>" + esc(T("zuletzt")) + " " + item(last.id) + "</small>" : "") + "</div></div>" +
+    '<div><div class="k">' + esc(T("Anwesenheit")) + '</div><div class="v">' + (f.sess ? fmtNum.format(Math.round(f.att * 100 / f.sess)) + " %" : "–") +
+      (f.sess ? " <small>" + esc(T("{0} von {1} Raids", f.att, f.sess)) + "</small>" : "") + "</div></div>" +
+    '<div><div class="k">' + esc(T("Nächster Raid")) + '</div><div class="v nr">' + (nr ? '<a href="#raids" data-act="raids">' + esc(nr.s.title) + "</a><br><b class=\"" +
+      (nr.w && nr.w.k === "g" ? "pos" : "") + "\">" + esc(whereText(nr.w)) + "</b> <small>" + esc(raidWhen(nr.s)) + "</small>" : '<small>' + esc(T("noch kein Setup")) + "</small>") + "</div></div>" +
+    "</div>";
+  if (putHtml(box, html)) whRefresh();
+}
+// Auswahl "Das bin ich": Gildenliste (und Namen mit Coins), schon vergebene sind nicht dabei
+function claimNames() {
+  var have = {}, out = [];
+  myChars().forEach(function (c) { have[c.char] = true; });
+  (guild.members || []).forEach(function (m) { if (!have[m.name]) { have[m.name] = true; out.push(m.name); } });
+  Object.keys((state.data && state.data.coins) || {}).forEach(function (n) { if (!have[n]) { have[n] = true; out.push(n); } });
+  return out.sort(function (a, b) { return a.localeCompare(b, LOC); });
+}
+function claimForm(id) {
+  return '<form class="claim" data-claim="' + id + '"><input id="' + id + '-c" list="' + id + '-l" name="c" placeholder="' + esc(T("Charaktername")) + '" aria-label="' + esc(T("Charaktername")) +
+    '" autocomplete="off" required><datalist id="' + id + '-l">' + claimNames().map(function (n) { return '<option value="' + esc(n) + '">'; }).join("") +
+    '</datalist><button class="btn primary" type="submit">' + esc(T("Das bin ich")) + '</button></form><p class="note">' +
+    esc(T("Ist dein Charakter schon vergeben, wende dich an einen Offizier.")) + "</p>";
+}
+function doClaim(name, fav) {
+  return rpc("nexloot_claim", { p_guild: G(), p_char: name, p_fav: !!fav }, true).then(function (me) { auth.me = me; flash(T("{0} ist jetzt mit deinem Discord verknüpft.", name)); render(); renderDlg(); })
+    .catch(function (e) { flash(e.message, true); });
+}
+
+// ---------------------------------------------------------------- Dialog: Meine Charaktere / Offizier freischalten
+var dlgMode = null, dlgAsk = null;
+// Rueckfrage im eigenen Fenster (statt window.confirm, das in eingebetteten Seiten oft blockiert ist) -> Promise<true/false>
+function askConfirm(text, okLabel) {
+  return new Promise(function (resolve) {
+    if (dlgAsk) dlgAsk.resolve(false);
+    dlgAsk = { text: text, ok: okLabel, resolve: resolve };
+    openDlg("ask");
+  });
+}
+function answerAsk(yes) { var a = dlgAsk; dlgAsk = null; closeDlg(); if (a) a.resolve(!!yes); }
+function openDlg(mode) { dlgMode = mode; renderDlg(); var d = $("dlg"); if (d && !d.open) { if (d.showModal) d.showModal(); else d.setAttribute("open", ""); } }
+function closeDlg() { var d = $("dlg"); dlgMode = null; if (d && d.open) { if (d.close) d.close(); else d.removeAttribute("open"); } }
+function renderDlg() {
+  var b = $("dlgBody"); if (!b || !dlgMode) return;
+  if (dlgMode === "chars") {
+    var c = myChars();
+    putHtmlKeep(b, "<h2>" + esc(T("Meine Charaktere")) + "</h2>" + (c.length ? '<ul class="mychars">' + c.map(function (x) {
+      return '<li><button type="button" class="star' + (x.fav ? " on" : "") + '" data-fav="' + esc(x.char) + '" title="' + esc(T("Als Lieblings-Charakter (Startseite)")) + '" aria-pressed="' +
+        (x.fav ? "true" : "false") + '">★</button>' + who(x.char) + (x.set_by && x.set_by !== "self" ? ' <span class="muted">' + esc(T("(zugeordnet von {0})", x.set_by)) + "</span>" : "") +
+        '<button type="button" class="btn small" data-unclaim="' + esc(x.char) + '">' + esc(T("lösen")) + "</button></li>"; }).join("") + "</ul>"
+      : '<p class="note">' + esc(T("Noch kein Charakter verknüpft.")) + "</p>") +
+      "<h3>" + esc(T("Charakter dazunehmen")) + "</h3>" + claimForm("claimB") +
+      '<div class="dlg-foot"><button class="btn" type="button" data-act="close">' + esc(T("Schließen")) + "</button></div>");
+  } else if (dlgMode === "unlock") {
+    putHtmlKeep(b, "<h2>" + esc(T("Als Offizier freischalten")) + '</h2><p class="note">' +
+      esc(T("Gib das Schreib-Passwort der Gilde ein (dasselbe wie in der Companion-App). Danach kannst du Setups planen und Charaktere zuordnen. Das Passwort wird nicht gespeichert.")) +
+      '</p><form id="unlockForm" class="claim"><input id="unlockPw" type="password" name="pw" autocomplete="current-password" placeholder="' + esc(T("Schreib-Passwort")) + '" aria-label="' +
+      esc(T("Schreib-Passwort")) + '" required><button class="btn primary" type="submit">' + esc(T("Freischalten")) + '</button></form><div class="dlg-foot"><button class="btn" type="button" data-act="close">' +
+      esc(T("Abbrechen")) + "</button></div>");
+  } else if (dlgMode === "ask" && dlgAsk) {
+    putHtmlKeep(b, '<p class="ask">' + esc(dlgAsk.text) + '</p><div class="dlg-foot"><button class="btn" type="button" data-act="ask-no">' + esc(T("Abbrechen")) +
+      '</button><button class="btn danger" type="button" data-act="ask-yes">' + esc(dlgAsk.ok) + "</button></div>");
+  }
+}
+
+// ---------------------------------------------------------------- Verwaltung (Offiziere): Discord-Konten und Charaktere
+function renderAdmin() {
+  var box = $("admBox"); if (!box) return;
+  if (!isOfficer()) { putHtml(box, ""); return; }
+  if (!adm.data) { putHtml(box, '<p class="empty">' + esc(adm.error ? T("Fehler: {0}", adm.error) : T("Lädt …")) + "</p>"); return; }
+  var users = adm.data.users || [], links = adm.data.links || [], byUser = {}, owner = {};
+  links.forEach(function (l) { (byUser[l.discord_id] = byUser[l.discord_id] || []).push(l); owner[l.char] = l.discord_id; });
+  var chars = claimNamesAll(), free = chars.filter(function (n) { return !owner[n]; });
+  var opts = function (sel) { return chars.map(function (n) { return '<option value="' + esc(n) + '"' + (n === sel ? " selected" : "") + ">" + esc(n) + (owner[n] ? " ✓" : "") + "</option>"; }).join(""); };
+  var uname = function (u) { return esc(u.name || T("(ohne Namen)")); };
+  putHtmlKeep(box,
+    '<section class="stat-block"><div class="stat-head"><h2>' + esc(T("Discord-Konten und Charaktere")) + "</h2></div>" +
+    '<p class="note">' + esc(T("Jeder kann seinen Charakter selbst wählen. Hier ordnest du die anderen zu - auch Spieler, die sich nie angemeldet haben (mit ihrer Discord-ID: in Discord Rechtsklick auf den Namen → „Benutzer-ID kopieren“, dafür muss der Entwicklermodus an sein).")) + "</p>" +
+    '<div class="scroll"><table class="adm"><thead><tr><th>' + esc(T("Discord")) + "</th><th>" + esc(T("Charaktere")) + '</th><th class="hide-s">' + esc(T("Rolle")) +
+    "</th><th>" + esc(T("Charakter dazu")) + "</th></tr></thead><tbody>" +
+    users.map(function (u) {
+      var ls = byUser[u.discord_id] || [];
+      return "<tr><td>" + avatarImg(u, "av") + " <b>" + uname(u) + '</b><div class="sub">' + esc(u.discord_id) + (u.login ? "" : " · " + esc(T("noch nie angemeldet"))) + "</div></td><td>" +
+        (ls.length ? ls.map(function (l) { return '<span class="chipx">' + (l.fav ? "★ " : "") + who(l.char) + '<button type="button" title="' + esc(T("Verknüpfung lösen")) + '" data-unlink="' + esc(l.char) + '">×</button></span>'; }).join(" ")
+          : '<span class="muted">–</span>') + '</td><td class="hide-s">' + (u.role === "officer" ? '<span class="tag">' + esc(T("Offizier")) + "</span>" : esc(T("Mitglied"))) +
+        (auth.me && u.discord_id !== auth.me.discord_id ? ' <button type="button" class="btn small" data-role="' + esc(u.discord_id) + '" data-to="' + (u.role === "officer" ? "member" : "officer") + '">' +
+          esc(u.role === "officer" ? T("zum Mitglied") : T("zum Offizier")) + "</button>" : "") +
+        '</td><td><form class="linkf" data-did="' + esc(u.discord_id) + '"><select name="c" aria-label="' + esc(T("Charakter")) + '"><option value="">' + esc(T("– wählen –")) + "</option>" + opts("") +
+        '</select><button class="btn small" type="submit">' + esc(T("zuordnen")) + "</button></form></td></tr>";
+    }).join("") + "</tbody></table></div></section>" +
+    '<section class="stat-block"><div class="stat-head"><h2>' + esc(T("Neues Discord-Konto zuordnen")) + "</h2></div>" +
+    '<form class="linkf newid" data-did=""><input id="admDid" name="did" inputmode="numeric" pattern="\\d{15,22}" placeholder="' + esc(T("Discord-ID (nur Ziffern)")) + '" aria-label="' + esc(T("Discord-ID")) +
+    '" required><input id="admDn" name="dn" placeholder="' + esc(T("Discord-Name (optional)")) + '" aria-label="' + esc(T("Discord-Name")) + '"><select name="c" aria-label="' + esc(T("Charakter")) +
+    '" required><option value="">' + esc(T("– Charakter –")) + "</option>" + opts("") + '</select><button class="btn primary" type="submit">' + esc(T("zuordnen")) + "</button></form></section>" +
+    '<section class="stat-block"><div class="stat-head"><h2>' + esc(T("Ohne Discord ({0})", free.length)) + '</h2></div><p class="note">' +
+    esc(T("Charaktere aus der Gildenliste, die noch niemandem gehören.")) + '</p><div class="freelist">' +
+    (free.length ? free.map(function (n) { return who(n); }).join(" ") : '<span class="muted">' + esc(T("alle zugeordnet")) + "</span>") + "</div></section>" +
+    '<section class="stat-block" id="emoBox">' + emoInner() + "</section>");
+}
+
+// ---------------------------------------------------------------- Klassen-Symbole fuer die Discord-Nachricht der Setups (Companion-App 1.8.2)
+// Pro Klasse ein Discord-Emoji (<:Name:ID>). Eintragen geht als Code, als Bildadresse (cdn.discordapp.com/emojis/ID.png) oder nur als ID.
+var EMO_CLASSES = ["WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID"];
+var EMO_NAME = { WARRIOR: "Krieger", PALADIN: "Paladin", HUNTER: "Jaeger", ROGUE: "Schurke", PRIEST: "Priester", SHAMAN: "Schamane", MAGE: "Magier",
+  WARLOCK: "Hexenmeister", DRUID: "Druide", DEATHKNIGHT: "Todesritter", MONK: "Moench", DEMONHUNTER: "Daemonenjaeger", EVOKER: "Rufer" };
+var EMO_ALIAS = { WARRIOR: ["krieger", "warrior", "warri"], PALADIN: ["paladin", "pala"], HUNTER: ["jaeger", "jager", "hunter"], ROGUE: ["schurke", "rogue"],
+  PRIEST: ["priester", "priest"], SHAMAN: ["schamane", "shaman", "schami"], MAGE: ["magier", "mage"], WARLOCK: ["hexenmeister", "warlock", "hexer"],
+  DRUID: ["druide", "druid", "dudu"], DEATHKNIGHT: ["todesritter", "deathknight", "dk"], MONK: ["moench", "monk"], DEMONHUNTER: ["daemonenjaeger", "demonhunter", "dh"],
+  EVOKER: ["rufer", "evoker"] };
+var EMO_CODE = /^<a?:[A-Za-z0-9_]{2,32}:\d{15,25}>$/;
+function emoSaved() { return (adm.data && adm.data.emojis) || {}; }
+function emoClasses() {
+  var l = EMO_CLASSES.slice(), seen = {};
+  l.forEach(function (c) { seen[c] = true; });
+  var add = function (c) { if (c && EMO_NAME[c] && !seen[c]) { seen[c] = true; l.push(c); } };
+  (guild.members || []).forEach(function (m) { add(m.class); });
+  Object.keys(emo.draft).forEach(add);
+  return l;
+}
+// Eingabe -> Emoji-Code ("" = keins, null = so nicht zu gebrauchen)
+function emoNorm(cls, raw) {
+  var v = String(raw == null ? "" : raw).trim(), m;
+  if (!v) return "";
+  if (EMO_CODE.test(v)) return v;
+  if ((m = /cdn\.discordapp\.com\/emojis\/(\d{15,25})(?:\.(\w+))?/i.exec(v))) {
+    return "<" + ((m[2] || "").toLowerCase() === "gif" || /animated=true/i.test(v) ? "a" : "") + ":" + (EMO_NAME[cls] || "Klasse") + ":" + m[1] + ">";
+  }
+  if (/^\d{15,25}$/.test(v)) return "<:" + (EMO_NAME[cls] || "Klasse") + ":" + v + ">";
+  return null;
+}
+function emoImg(code) {
+  var m = /^<(a?):\w+:(\d+)>$/.exec(code || "");
+  return m ? '<img class="emo" alt="" loading="lazy" src="https://cdn.discordapp.com/emojis/' + m[2] + (m[1] ? ".gif" : ".png") + '?size=48">' : "";
+}
+function emoKey(n) { return String(n).toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z]/g, ""); }
+function emoGuess(name) { // Emoji-Name -> Klasse (laengster passender Name gewinnt, z. B. "wow_warrior", "Priester2")
+  var k = emoKey(name), best = null, bl = 0;
+  Object.keys(EMO_ALIAS).forEach(function (c) {
+    EMO_ALIAS[c].forEach(function (al) { if ((k === al || (al.length >= 4 && k.indexOf(al) >= 0)) && al.length > bl) { best = c; bl = al.length; } });
+  });
+  return best;
+}
+function emoInner() {
+  if (!adm.data || !("emojis" in adm.data)) {
+    return '<div class="stat-head"><h2>' + esc(T("Klassen-Symbole für Discord")) + '</h2></div><p class="note">' +
+      esc(T("Für die Klassen-Symbole in Supabase einmal die neue nexloot_konten.sql ausführen (siehe Anleitung).")) + "</p>";
+  }
+  if (!emo.dirty) emo.draft = Object.assign({}, emoSaved());
+  var cl = emoClasses(), bad = 0, have = 0;
+  var rows = cl.map(function (c) {
+    var raw = emo.draft[c] || "", code = emoNorm(c, raw);
+    if (code === null) bad++; else if (code) have++;
+    return "<tr><td>" + '<span class="who"' + (CLASS_COLORS[c] ? ' style="--cls:' + CLASS_COLORS[c] + '"' : "") + ">" + esc(className(c)) + "</span>" +
+      '</td><td class="emo-prev">' + (code ? emoImg(code) : '<span class="muted">–</span>') + '</td><td><input id="emo-' + c + '" data-emo="' + c + '" value="' + esc(raw) +
+      '" placeholder="' + esc("<:" + EMO_NAME[c] + ":123456789012345678>") + '" aria-label="' + esc(T("Symbol für {0}", className(c))) + '"' + (code === null ? ' class="bad"' : "") +
+      ' spellcheck="false" autocomplete="off">' + (code === null ? '<div class="sub neg">' + esc(T("So nicht - Emoji-Code, Bildadresse oder ID eintragen")) + "</div>" : "") + "</td></tr>";
+  }).join("");
+  return '<div class="stat-head"><h2>' + esc(T("Klassen-Symbole für Discord")) + "</h2></div>" +
+    '<p class="note">' + esc(T("Wie bei Raid-Helper: In der Discord-Nachricht zum Setup steht vor jedem Spieler das Symbol seiner Klasse. Dafür müssen die Symbole als Emojis in Discord liegen (siehe Anleitung, Schritt 9). Pro Klasse den Emoji-Code eintragen (z. B. <:Krieger:123456789012345678>), die Bildadresse des Emojis oder nur seine ID. Leer = wie bisher nur die Rolle.")) + "</p>" +
+    '<div class="emo-paste"><textarea id="emoPaste" rows="2" spellcheck="false" placeholder="' + esc(T("Mehrere auf einmal: in Discord \\:Krieger: \\:Paladin: … schicken, die Antwort kopieren und hier einfügen")) +
+    '" aria-label="' + esc(T("Mehrere Emoji-Codes auf einmal")) + '">' + esc(emo.paste) + '</textarea><button class="btn" type="button" data-act="emo-parse">' + esc(T("Zuordnen")) + "</button></div>" +
+    (emo.unmatched.length ? '<p class="note neg">' + esc(T("Nicht zugeordnet (Name passt zu keiner Klasse): {0} - bitte unten bei der Klasse eintragen.", emo.unmatched.join(" "))) + "</p>" : "") +
+    '<div class="scroll"><table class="emo-t"><thead><tr><th>' + esc(T("Klasse")) + "</th><th>" + esc(T("Symbol")) + "</th><th>" + esc(T("Emoji-Code, Bildadresse oder ID")) +
+    "</th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+    '<div class="emo-foot"><span class="muted">' + esc(T("{0} von {1} Klassen mit Symbol", have, cl.length)) + "</span>" +
+    '<button class="btn" type="button" data-act="emo-reset"' + (emo.dirty ? "" : " disabled") + ">" + esc(T("Verwerfen")) + "</button>" +
+    '<button class="btn primary" type="button" data-act="emo-save"' + (emo.dirty && !bad ? "" : " disabled") + ">" + esc(T("Speichern")) + "</button></div>";
+}
+function renderEmo() { var b = $("emoBox"); if (b) putHtmlKeep(b, emoInner()); else renderAdmin(); }
+function emoParse() {
+  var txt = emo.paste || "", re = /<(a?):([A-Za-z0-9_]{2,32}):(\d{15,25})>/g, m, got = 0, un = [];
+  while ((m = re.exec(txt))) {
+    var c = emoGuess(m[2]);
+    if (c) { emo.draft[c] = m[0]; got++; } else if (un.indexOf(m[0]) < 0) un.push(m[0]);
+  }
+  emo.unmatched = un;
+  if (got && !un.length) emo.paste = ""; // alles zugeordnet: Feld wieder leer
+  if (got) { emo.dirty = true; flash(got === 1 ? T("1 Klasse zugeordnet - prüfen und „Speichern“.") : T("{0} Klassen zugeordnet - prüfen und „Speichern“.", got)); }
+  else if (!un.length) flash(/:[A-Za-z0-9_]{2,32}:/.test(txt) ? T("Da stehen nur Namen wie :Krieger: ohne Nummer. In Discord vor jedes Emoji einen \\ setzen und abschicken - dann zeigt Discord den Code mit Nummer.")
+    : T("Keine Emoji-Codes gefunden (so sehen sie aus: <:Krieger:123456789012345678>)."), true);
+  renderEmo();
+}
+function emoSave() {
+  var map = {}, bad = false;
+  emoClasses().forEach(function (c) { var v = emoNorm(c, emo.draft[c]); if (v === null) bad = true; else if (v) map[c] = v; });
+  if (bad) return;
+  rpc("nexloot_dc_emojis_set", { p_guild: G(), p_map: map }, true).then(function (r) {
+    if (adm.data) adm.data.emojis = (r && r.emojis) || map;
+    emo.dirty = false; emo.unmatched = []; emo.paste = "";
+    flash(T("Klassen-Symbole gespeichert.") + (r && r.redo ? " " + T("Die Companion-App schreibt die Discord-Nachrichten der kommenden Raids in den nächsten Minuten neu.") : ""));
+    renderEmo();
+  }).catch(function (e) { flash(/nexloot_dc_emojis_set|schema cache|does not exist|PGRST20/.test(e.message) ? T("Für die Klassen-Symbole in Supabase einmal die neue nexloot_konten.sql ausführen (siehe Anleitung).") : e.message, true); });
+}
+function claimNamesAll() {
+  var have = {}, out = [];
+  (guild.members || []).forEach(function (m) { if (!have[m.name]) { have[m.name] = true; out.push(m.name); } });
+  Object.keys((state.data && state.data.coins) || {}).forEach(function (n) { if (!have[n]) { have[n] = true; out.push(n); } });
+  return out.sort(function (a, b) { return a.localeCompare(b, LOC); });
+}
+function admCall(name, args) {
+  return rpc(name, Object.assign({ p_guild: G() }, args), true).then(function (d) { adm.data = d; adm.error = null; renderAdmin(); if (name === "nexloot_link_set") loadMe(); })
+    .catch(function (e) { flash(e.message, true); });
+}
+
+// ---------------------------------------------------------------- Raids: Setups (alle sehen veroeffentlichte, Offiziere planen)
+var editS = null; // Setup in Bearbeitung: { id, rev, title, size, when, status, data, sel, q, lv }
+function groupsFor(size) { return Math.max(1, Math.min(8, Math.round(size / 5))); }
+function setupCounts(data) {
+  var r = { T: 0, H: 0, D: 0, "?": 0 }, cls = {}, n = 0;
+  (data.groups || []).forEach(function (g) {
+    (g || []).forEach(function (name) {
+      n++;
+      var m = memberOf(name), x = m ? roleOf(m) : null;
+      r[x ? x.r : "?"]++;
+      var c = (m && m.class) || (state.data && state.data.classes && state.data.classes[name]) || "?";
+      cls[c] = (cls[c] || 0) + 1;
+    });
+  });
+  return { roles: r, cls: cls, n: n };
+}
+function memberOf(n) { var l = guild.members || []; for (var i = 0; i < l.length; i++) if (l[i].name === n) return l[i]; return null; }
+function countsHtml(data, size) {
+  var c = setupCounts(data);
+  var cl = Object.keys(c.cls).sort(function (a, b) { return (c.cls[b] - c.cls[a]) || className(a).localeCompare(className(b), LOC); });
+  return '<div class="rcount"><b class="' + (c.n >= size ? "pos" : "") + '">' + c.n + " / " + size + "</b>" +
+    ["T", "H", "D"].map(function (r) { return '<span class="rp" style="--c:' + ROLES[r].c + '">' + esc(T(ROLES[r].label)) + " <b>" + c.roles[r] + "</b></span>"; }).join("") +
+    (c.roles["?"] ? '<span class="rp">' + esc(T("ohne Angabe")) + " <b>" + c.roles["?"] + "</b></span>" : "") +
+    '<span class="legend">' + cl.map(function (k) { return "<span><i style=\"background:" + (CLASS_COLORS[k] || "var(--muted)") + '"></i>' + esc(k === "?" ? "?" : className(k)) + "<b>" + c.cls[k] + "</b></span>"; }).join("") + "</span></div>";
+}
+function pchip(name, opts) {
+  var m = memberOf(name), x = m ? roleOf(m) : null, mine = myChars().some(function (c) { return c.char === name; });
+  var cls = (m && m.class) || (state.data && state.data.classes && state.data.classes[name]);
+  return '<span class="pc' + (mine ? " me" : "") + (opts && opts.sel === name ? " sel" : "") + '"' + (opts && opts.edit ? ' draggable="true" tabindex="0" role="button" data-p="' + esc(name) + '"' : "") + ">" +
+    '<span class="who"' + (CLASS_COLORS[cls] ? ' style="--cls:' + CLASS_COLORS[cls] + '"' : "") + ">" + esc(name) + "</span>" +
+    (x ? '<i class="rl ' + x.r + (x.guess ? " guess" : "") + '" title="' + esc(T(ROLES[x.r].label)) + '">' + esc(T(ROLES[x.r].label).slice(0, 1)) + "</i>" : "") +
+    (m && opts && opts.lv ? '<small class="lvl">' + m.level + "</small>" : "") + (opts && opts.rk ? rkBadge(opts.rk[name]) : "") + "</span>";
+}
+// ---------------------------------------------------------------- Raid-Helper: Events, Anmeldungen, senden (nur Offiziere)
+var RK = { ok: ["✔", "ok", "bei Raid-Helper angemeldet"], tentative: ["?", "maybe", "bei Raid-Helper vorläufig angemeldet"], late: ["?", "maybe", "kommt laut Raid-Helper später"],
+  bench: ["B", "bench", "bei Raid-Helper auf der Ersatzbank"], absent: ["✖", "absent", "bei Raid-Helper abgemeldet"] };
+function rkBadge(k) { var x = RK[k]; return x ? '<i class="rk ' + x[1] + '" title="' + esc(T(x[2])) + '">' + x[0] + "</i>" : '<i class="rk"></i>'; }
+function rhMissing(msg) { return /nexloot_rh_|schema cache|PGRST20|does not exist/.test(msg || ""); }
+function rhLoadEvents(force) {
+  if (!isOfficer() || rh.loading || rh.off === "missing") return;
+  if (!force && rh.at && Date.now() - rh.at < 60000) return;
+  rh.loading = true;
+  rpc("nexloot_rh_events", { p_guild: G() }, true)
+    .then(function (r) { rh.events = (r && r.events) || []; rh.linked = (r && r.linked) || {}; rh.error = null; rh.off = null; })
+    .catch(function (e) { rh.error = e.message; rh.off = rhMissing(e.message) ? "missing" : /noch nicht eingerichtet|not set up yet/.test(e.message) ? "nokey" : null; })
+    .then(function () { rh.loading = false; rh.at = Date.now(); rhRender(); });
+}
+function rhLoadEvent(id, fresh) {
+  if (!id || !isOfficer() || rh.off === "missing") return;
+  var c = rh.ev[id] || (rh.ev[id] = { at: 0 });
+  if (c.loading || (!fresh && c.at && Date.now() - c.at < 60000)) return;
+  c.loading = true;
+  rpc("nexloot_rh_event", { p_guild: G(), p_event: id, p_fresh: !!fresh }, true)
+    .then(function (r) { c.data = r; c.error = null; })
+    .catch(function (e) { c.error = e.message; if (rhMissing(e.message)) rh.off = "missing"; })
+    .then(function () { c.loading = false; c.at = Date.now(); rhRender(); });
+}
+function rhRender() { if (editS) renderEdit(); else renderRaids(); }
+// Charakter -> Art seiner Anmeldung (ok, tentative, late, bench, absent)
+function rhKinds(id) {
+  var c = rh.ev[id], out = {}, rank = { ok: 5, bench: 4, late: 3, tentative: 2, absent: 1 };
+  ((c && c.data && c.data.signups) || []).forEach(function (x) {
+    (x.chars || []).forEach(function (n) { if (!out[n] || rank[x.kind] > rank[out[n]]) out[n] = x.kind; });
+  });
+  return out;
+}
+function rhCount(d) {
+  var r = { ok: 0, maybe: 0, absent: 0, bench: 0 };
+  ((d && d.signups) || []).forEach(function (x) { if (x.kind === "ok") r.ok++; else if (x.kind === "absent") r.absent++; else if (x.kind === "bench") r.bench++; else r.maybe++; });
+  return r;
+}
+function rhCountText(d) {
+  var c = rhCount(d);
+  return T("{0} angemeldet", c.ok) + (c.maybe ? " · " + T("{0} vorläufig/später", c.maybe) : "") + (c.bench ? " · " + T("{0} Ersatzbank", c.bench) : "") +
+    (c.absent ? " · " + T("{0} abgemeldet", c.absent) : "");
+}
+function rhEvLabel(e) {
+  return (e.start ? fmtDay.format(new Date(e.start * 1000)) + " " + new Intl.DateTimeFormat(LOC, { hour: "2-digit", minute: "2-digit" }).format(new Date(e.start * 1000)) + " · " : "") +
+    (e.title || "?") + (e.channelName ? " · #" + e.channelName : "");
+}
+// Zeile oben im Editor: Raid-Helper-Event waehlen
+function rhEditRow() {
+  if (!isOfficer() || rh.off === "missing") return "";
+  if (rh.off === "nokey") return '<div class="rh-row"><span class="muted">' + esc(T("Raid-Helper: noch nicht eingerichtet (API-Key und Server-ID im Supabase-Vault, siehe Anleitung Schritt 10).")) + "</span></div>";
+  var evs = rh.events || [], cur = editS.rh || "";
+  var opts = '<option value="">' + esc(rh.events ? T("– kein Raid-Helper-Event –") : T("Lädt …")) + "</option>" + evs.map(function (e) {
+    var taken = rh.linked && rh.linked[e.id] && rh.linked[e.id] !== editS.id;
+    return '<option value="' + esc(e.id) + '"' + (cur === e.id ? " selected" : "") + ">" + esc(rhEvLabel(e) + (taken ? " " + T("(hängt schon an einem Setup)") : "")) + "</option>";
+  }).join("");
+  if (cur && !evs.some(function (e) { return e.id === cur; })) opts += '<option value="' + esc(cur) + '" selected>' + esc(T("Event {0}", cur)) + "</option>";
+  var k = cur ? rh.ev[cur] : null;
+  return '<div class="rh-row"><label>' + esc(T("Raid-Helper-Event")) + ' <select id="seRh" aria-label="' + esc(T("Raid-Helper-Event")) + '">' + opts + "</select></label>" +
+    (cur && k && k.data ? '<span class="muted">' + esc(rhCountText(k.data)) + "</span>" : cur && k && k.error ? '<span class="neg">' + esc(T("Fehler: {0}", k.error)) + "</span>" : "") +
+    (cur ? '<label class="chk"><input id="seRhOnly" type="checkbox"' + (editS.rhOnly ? " checked" : "") + "> " + esc(T("nur Angemeldete")) + "</label>" +
+      '<button type="button" class="btn small" data-act="rh-reload">' + esc(T("Anmeldungen neu laden")) + "</button>" +
+      '<button type="button" class="btn small" data-act="rh-import"' + (rh.importing ? " disabled" : "") + ">" + esc(rh.importing ? T("Lädt …") : T("Aus Raid-Helper übernehmen")) + "</button>" : "") +
+    (cur && editS.rhMiss && editS.rhMiss.length ? '<span class="muted rh-miss">' + esc(T("Nicht übernommen (kein verknüpfter Charakter): {0}", editS.rhMiss.join(", "))) + "</span>" : "") +
+    (rh.error && !rh.events ? '<span class="neg">' + esc(T("Fehler: {0}", rh.error)) + "</span>" : "") + "</div>";
+}
+// Aufstellung aus dem Comp-Tool von Raid-Helper in die Gruppen des Editors holen (gespeichert wird wie immer mit dem Editor)
+function rhImport() {
+  var id = editS && editS.rh; if (!id || rh.importing) return;
+  rh.importing = true; renderEdit();
+  rpc("nexloot_rh_comp", { p_guild: G(), p_event: id }, true).then(function (r) {
+    if (!editS || editS.rh !== id) return;
+    var slots = (r && r.slots) || [], take = slots.filter(function (x) { return x.char; });
+    if (!take.length) { editS.rhMiss = slots.map(function (x) { return x.name; }); flash(T("In der Komposition bei Raid-Helper steht niemand, den die Webapp einem Charakter zuordnen kann."), true); return; }
+    var has = editS.data.groups.some(function (g) { return (g || []).length; });
+    return (has ? askConfirm(T("Die Gruppen im Editor werden durch die Aufstellung aus dem Comp-Tool von Raid-Helper ersetzt. Wer jetzt eingeteilt ist und dort fehlt, kommt zurück in die Spielerliste."),
+      T("Übernehmen")) : Promise.resolve(true)).then(function (yes) {
+      if (!yes || !editS || editS.rh !== id) return;
+      // Größe so, dass alle Gruppen aus Raid-Helper Platz haben (10 = 2, 20 = 4, 40 = 8 Gruppen)
+      var maxG = take.reduce(function (m, x) { return Math.max(m, x.group || 0); }, 0), sz = editS.size;
+      if (maxG > groupsFor(sz)) sz = maxG > 4 ? 40 : maxG > 2 ? 20 : 10;
+      var gn = groupsFor(sz), groups = [], miss = slots.filter(function (x) { return !x.char; }).map(function (x) { return x.name; }), inG = {}, n = 0;
+      for (var i = 0; i < gn; i++) groups.push([]);
+      take.forEach(function (x) {
+        var g = groups[(x.group || 0) - 1];
+        if (g && g.length < 5 && !inG[x.char]) { g.push(x.char); inG[x.char] = true; n++; } else miss.push(x.name);
+      });
+      var d = editS.data;
+      d.groups = groups;
+      d.bench = d.bench.filter(function (c) { return !inG[c]; });
+      d.out = d.out.filter(function (c) { return !inG[c]; });
+      editS.size = sz; editS.sel = null; editS.dirty = true; editS.rhMiss = miss;
+      flash(T("{0} Spieler aus Raid-Helper übernommen - zum Behalten speichern oder veröffentlichen.", n));
+    });
+  }).catch(function (e) { flash(e.message, true); })
+    .then(function () { rh.importing = false; if (editS) renderEdit(); });
+}
+function rhPick(id) {
+  editS.rh = id || ""; editS.dirty = true; editS.rhMiss = null;
+  var e = (rh.events || []).filter(function (x) { return x.id === id; })[0];
+  if (e) {
+    var t = $("seTitle"); if (t) editS.title = t.value;
+    if (!(editS.title || "").trim()) editS.title = e.title || "";
+    if (e.start) editS.when = e.start;
+  }
+  if (id) rhLoadEvent(id);
+  renderEdit();
+}
+// Kasten unter einem Setup (Offiziere): Raid-Helper-Event, Anmeldungen gegen Einteilung, senden
+function rhCardBlock(s) {
+  if (!isOfficer() || !s.rh_event || rh.off === "missing") return "";
+  rhLoadEvent(s.rh_event);
+  var k = rh.ev[s.rh_event], ev = k && k.data, d = s.data || {}, h = '<div class="rhbox">';
+  h += '<div class="sb-h"><b>Raid-Helper</b>: ' + (ev ? esc(ev.title || "?") + (ev.start ? ' <span class="muted">· ' + esc(raidWhen({ starts_at: ev.start })) + "</span>" : "") +
+    ' <span class="muted">· ' + esc(rhCountText(ev)) + "</span>" : esc(k && k.error ? T("Fehler: {0}", k.error) : T("Lädt …"))) + "</div>";
+  if (ev) {
+    var kinds = rhKinds(s.rh_event), planned = [], inSetup = {};
+    (d.groups || []).forEach(function (g) { (g || []).forEach(function (n) { planned.push(n); inSetup[n] = true; }); });
+    (d.bench || []).forEach(function (n) { inSetup[n] = true; });
+    var signed = [], loose = [];
+    (ev.signups || []).forEach(function (x) {
+      if (x.kind !== "ok") return;
+      if (!(x.chars || []).length) loose.push(x.name || "?");
+      (x.chars || []).forEach(function (n) { if (!inSetup[n] && signed.indexOf(n) < 0) signed.push(n); });
+    });
+    h += namesLine(T("Eingeteilt, aber abgemeldet"), planned.filter(function (n) { return kinds[n] === "absent"; }), "neg") +
+      namesLine(T("Eingeteilt, aber nur vorläufig/später"), planned.filter(function (n) { return kinds[n] === "tentative" || kinds[n] === "late"; }), "") +
+      namesLine(T("Eingeteilt, aber nicht angemeldet"), planned.filter(function (n) { return !kinds[n]; }), "") +
+      namesLine(T("Angemeldet, aber nicht eingeteilt"), signed, "") +
+      (loose.length ? '<div class="sb-l"><span class="k">' + esc(T("Angemeldet ohne verknüpften Charakter ({0}):", loose.length)) + "</span> " + esc(loose.join(", ")) + "</div>" : "");
+  }
+  h += '<div class="rh-acts"><span class="muted">' + esc(s.rh_sent_at ? T("Zuletzt gesendet: {0} von {1}", when(s.rh_sent_at), s.rh_sent_by || "?") +
+      (s.rh_sent_rev !== s.rev ? " · " + T("seitdem geändert") : "") : T("Noch nicht an Raid-Helper gesendet.")) + "</span>";
+  if (s.status !== "published") h += '<span class="muted">' + esc(T("Zum Senden erst veröffentlichen.")) + "</span>";
+  else {
+    var busy = rh.sending === s.id;
+    h += '<button type="button" class="btn primary small" data-rhsend="' + s.id + '"' + (busy ? " disabled" : "") + ">" + esc(busy ? T("Sende …") : s.rh_sent_at ? T("Erneut senden") : T("An Raid-Helper senden")) + "</button>" +
+      (s.rh_sent_at ? '<button type="button" class="btn small" data-rhpost="' + s.id + '"' + (busy ? " disabled" : "") + ">" + esc(T("Neu posten")) + "</button>" : "");
+  }
+  h += '<button type="button" class="btn small" data-rhreload="' + esc(s.rh_event) + '">' + esc(T("Anmeldungen neu laden")) + "</button>";
+  return h + "</div></div>";
+}
+function rhSend(id, newPost) {
+  if (rh.sending) return;
+  rh.sending = id; renderRaids();
+  rpc("nexloot_rh_send", { p_guild: G(), p_id: id, p_new_post: !!newPost }, true).then(function (r) {
+    var msg = r && r.posted ? T("An Raid-Helper gesendet - Raid-Helper postet das Setup jetzt in Discord.") : T("An Raid-Helper gesendet - der Post in Discord aktualisiert sich.");
+    if (r && r.posted && r.premium === false) msg += " " + T("Ohne Premium: ein einfacher Post, der sich nicht selbst aktualisiert.");
+    if (r && r.nouser && r.nouser.length) msg += " " + T("Ohne Discord-Verknüpfung (Raid-Helper kennt sie nicht): {0}", r.nouser.join(", "));
+    if (r && r.skipped && r.skipped.length) msg += " " + T("Ohne bekannte Klasse nicht gesendet: {0}", r.skipped.join(", "));
+    flash(msg);
+  }).catch(function (e) { flash(e.message, true); })
+    .then(function () { rh.sending = null; return loadSetups(); });
+}
+function setupView(s, edit) {
+  var d = s.data || {}, gn = groupsFor(s.size), html = '<div class="grps g' + gn + '">';
+  for (var i = 0; i < gn; i++) {
+    var g = (d.groups || [])[i] || [];
+    html += '<div class="grp' + (edit ? " dz" : "") + '" data-t="g' + i + '"><div class="gh">' + esc(T("Gruppe {0}", i + 1)) + ' <span class="muted">' + g.length + "/5</span>" +
+      (edit && editS.sel ? '<button type="button" class="btn small here" data-to="g' + i + '">' + esc(T("hierher")) + "</button>" : "") + "</div>" +
+      g.map(function (n) { return pchip(n, { edit: edit, sel: edit && editS.sel, rk: edit && editS.rh && rh.ev[editS.rh] && rh.ev[editS.rh].data ? rhKinds(editS.rh) : null }); }).join("") +
+      (edit ? new Array(Math.max(0, 5 - g.length) + 1).join('<span class="slot"></span>') : "") + "</div>";
+  }
+  html += "</div>";
+  [["bench", T("Ersatzbank")], ["out", T("Nicht dabei")]].forEach(function (b) {
+    var l = d[b[0]] || [];
+    if (!edit && !l.length) return;
+    html += '<div class="grp wide' + (edit ? " dz" : "") + '" data-t="' + b[0] + '"><div class="gh">' + esc(b[1]) + ' <span class="muted">' + l.length + "</span>" +
+      (edit && editS.sel ? '<button type="button" class="btn small here" data-to="' + b[0] + '">' + esc(T("hierher")) + "</button>" : "") + "</div>" +
+      (l.length ? l.map(function (n) { return pchip(n, { edit: edit, sel: edit && editS.sel, rk: edit && editS.rh && rh.ev[editS.rh] && rh.ev[editS.rh].data ? rhKinds(editS.rh) : null }); }).join("") : '<span class="muted small">' + esc(T("niemand")) + "</span>") + "</div>";
+  });
+  return html;
+}
+function renderRaids(force) {
+  var box = $("raidList"); if (!box) return;
+  var now = Date.now() / 1000, off = isOfficer();
+  // ab der neuen nexloot_konten.sql stehen Raids, die über 6 Stunden her sind, unten bei „Vergangene Raids“
+  var l = (setups.list || []).filter(function (s) { return past.missing || !s.starts_at || s.starts_at > now - 6 * 3600; });
+  var np = l.filter(function (s) { return s.status === "published"; }).length;
+  $("nRaids").textContent = np ? fmtNum.format(np) : "";
+  renderPast();
+  if (editS) { $("raidTools").hidden = true; box.hidden = true; if (force) $("raidEdit")._nx = null; if (force || editS.sig !== poolSig()) renderEdit(); return; }
+  $("raidEdit").hidden = true; box.hidden = false; $("raidTools").hidden = false;
+  putHtml($("raidTools"), '<span class="muted">' + esc(off ? T("Veröffentlichte Setups sieht jeder, Entwürfe nur ihr Offiziere.")
+      : T("Wer in welcher Gruppe ist. Melde dich mit Discord an, dann ist dein Charakter markiert.")) + "</span>" +
+    (off ? '<button class="btn primary" type="button" data-act="newsetup">' + esc(T("Neues Setup")) + "</button>" : ""));
+  if (setups.error && !l.length) { putHtml(box, '<p class="empty">' + esc(setups.missing
+      ? T("Raid-Setups sind noch nicht eingerichtet: In Supabase einmal nexloot_konten.sql ausführen (siehe Anleitung).") : T("Fehler: {0}", setups.error)) + "</p>"); return; }
+  if (!l.length) { putHtml(box, '<p class="empty">' + esc(off ? T("Noch kein Setup. „Neues Setup“ legt eins an.") : T("Noch kein Raid geplant.")) + "</p>"); return; }
+  var mine = favChar();
+  putHtml(box, l.map(function (s) {
+    var w = mine ? whereIn(s, mine) : null;
+    return '<article class="setup" data-id="' + s.id + '"><div class="setup-head"><h2>' + esc(s.title) + "</h2>" +
+      (s.status === "draft" ? '<span class="status offen">' + esc(T("Entwurf")) + "</span>" : "") +
+      '<span class="muted">' + esc(raidWhen(s)) + (s.starts_at ? " · " : "") + esc(T("{0} Spieler", s.size)) + "</span>" +
+      (mine ? '<span class="mine-where ' + (w && w.k === "g" ? "pos" : "") + '">' + esc(mine) + ": " + esc(whereText(w)) + "</span>" : "") +
+      (off ? '<button class="btn small" type="button" data-edit="' + s.id + '">' + esc(T("Bearbeiten")) + "</button>" : "") + "</div>" +
+      countsHtml(s.data || {}, s.size) + setupView(s, false) + sessBlock(s) + rhCardBlock(s) +
+      (s.updated_by || (off && s.discord) ? '<p class="note">' + esc(s.updated_by ? T("Zuletzt geändert von {0}", s.updated_by) : "") +
+        (off && s.discord ? (s.updated_by ? " · " : "") + esc(T("steht so in Discord")) : "") + "</p>" : "") + "</article>";
+  }).join("")) && whRefresh();
+}
+// ---------------------------------------------------------------- Vergangene Raids und Session zum Setup
+var PAST_N = 10;
+function loadPast(more) {
+  if (past.loading) return Promise.resolve();
+  past.loading = true; renderPast();
+  var last = more && past.list.length ? past.list[past.list.length - 1].starts_at : null;
+  return rpc("nexloot_setups_past", { p_guild: G(), p_before: last, p_limit: PAST_N })
+    .then(function (r) {
+      var l = (r && r.list) || [];
+      past.list = more ? past.list.concat(l) : l; past.more = !!(r && r.more); past.error = null; past.missing = false;
+    })
+    .catch(function (e) { past.error = e.message; past.missing = /nexloot_setups_past|schema cache|does not exist|PGRST20/.test(e.message); })
+    .then(function () { past.loading = false; past.loaded = true; renderRaids(); });
+}
+// Welche Session gehört zum Setup? Von Hand zugeordnet, sonst die, die zwischen 3 Std. vor und 6 Std. nach Raidbeginn anfing
+function sessFor(s) {
+  var all = list(state.data && state.data.sessions);
+  if (s.sess === "-") return { e: null, manual: true };
+  if (s.sess) { var m = all.filter(function (e) { return sessKey(e) === s.sess; })[0]; return { e: m || null, manual: true, missing: !m }; }
+  var best = null, bd = 1e12;
+  all.forEach(function (e) {
+    var dd = (e.start || e.sid || 0) - (s.starts_at || 0);
+    if (s.starts_at && dd >= -3 * 3600 && dd <= 6 * 3600 && Math.abs(dd) < bd) { bd = Math.abs(dd); best = e; }
+  });
+  return { e: best, manual: false };
+}
+// geplant (Gruppen) gegen dabei (Teilnehmerliste der Session)
+function attendance(s, e) {
+  var d = s.data || {}, planned = [], bench = d.bench || [], mem = memberList(e), has = {}, pl = {};
+  (d.groups || []).forEach(function (g) { (g || []).forEach(function (n) { planned.push(n); }); });
+  mem.forEach(function (n) { has[n] = true; });
+  planned.concat(bench).forEach(function (n) { pl[n] = true; });
+  return { planned: planned.length, came: planned.filter(function (n) { return has[n]; }), missing: planned.filter(function (n) { return !has[n]; }),
+    benchIn: bench.filter(function (n) { return has[n]; }), extra: mem.filter(function (n) { return !pl[n]; }).sort(function (a, b) { return a.localeCompare(b, LOC); }),
+    hasList: mem.length > 0 };
+}
+function sessOptions(s, sm) {
+  var all = sessionsSorted(), t = s.starts_at || 0, cur = s.sess || "";
+  var near = all.filter(function (e) { return Math.abs((e.start || e.sid || 0) - t) <= 2 * 86400; });
+  if (cur && cur !== "-" && !near.some(function (e) { return sessKey(e) === cur; })) near = near.concat(all.filter(function (e) { return sessKey(e) === cur; }));
+  var auto = cur ? T("automatisch") : sm.e ? T("automatisch: {0}", sessionLabel(sm.e)) : T("automatisch (keine gefunden)");
+  return '<option value=""' + (!cur ? " selected" : "") + ">" + esc(auto) + "</option>" +
+    '<option value="-"' + (cur === "-" ? " selected" : "") + ">" + esc(T("keine Session")) + "</option>" +
+    near.map(function (e) { var k = sessKey(e); return '<option value="' + esc(k) + '"' + (cur === k ? " selected" : "") + ">" + esc(sessionLabel(e)) + "</option>"; }).join("");
+}
+function namesLine(label, names, cls) {
+  return names.length ? '<div class="sb-l"><span class="k">' + esc(label) + " (" + names.length + "):</span> " +
+    (cls ? '<span class="' + cls + '">' : "") + names.map(function (n) { return who(n); }).join(", ") + (cls ? "</span>" : "") + "</div>" : "";
+}
+// Kasten unter einem Setup, dessen Raid schon angefangen hat: Session, wer da war, (Offiziere) zuordnen
+function sessBlock(s) {
+  if (!s.starts_at || s.starts_at > Date.now() / 1000 - 1800 || !state.data || s.status === "draft") return "";
+  var sm = sessFor(s), e = sm.e, h = '<div class="sessbox">';
+  if (e) {
+    var rows = sessRows(e, list(state.data.history)), given = rows.filter(function (x) { return x.w && x.w !== "-"; }).length;
+    h += '<div class="sb-h">' + esc(T("Session")) + ': <button type="button" class="linkbtn" data-opensess="' + esc(sessKey(e)) + '">' + esc(sessionLabel(e)) + "</button>" +
+      ' <span class="muted">· ' + esc(sm.manual ? T("von Hand zugeordnet") : T("automatisch zugeordnet")) + " · " + esc(given === 1 ? T("1 Item vergeben") : T("{0} Items vergeben", given)) + "</span></div>";
+    var a = attendance(s, e);
+    if (!a.hasList) h += '<div class="muted">' + esc(T("Für diese Session gibt es keine Teilnehmerliste (erst ab NexLoot 0.21).")) + "</div>";
+    else h += '<div><b class="' + (a.missing.length ? "" : "pos") + '">' + esc(T("Dabei: {0} von {1} aus den Gruppen", a.came.length, a.planned)) + "</b></div>" +
+      namesLine(T("Gefehlt"), a.missing, "neg") + namesLine(T("Von der Ersatzbank eingesprungen"), a.benchIn, "") + namesLine(T("Ohne Setup dabei"), a.extra, "");
+  } else {
+    h += '<div class="muted">' + esc(sm.manual ? (sm.missing ? T("Die zugeordnete Session gibt es nicht mehr.") : T("Keine Session (so eingestellt).")) : T("Keine passende Session gefunden.")) + "</div>";
+  }
+  if (isOfficer()) h += '<label class="sb-sel">' + esc(T("Session zuordnen:")) + ' <select data-sesssel="' + s.id + '">' + sessOptions(s, sm) + "</select></label>";
+  return h + "</div>";
+}
+function setSess(id, v) {
+  rpc("nexloot_setup_session", { p_guild: G(), p_id: id, p_sess: v || null }, true)
+    .then(function (r) {
+      (setups.list || []).concat(past.list).forEach(function (s) { if (s.id === id) s.sess = r && "sess" in r ? r.sess : (v || null); });
+      flash(T("Session zugeordnet.")); renderRaids();
+    }).catch(function (e) { flash(e.message, true); renderRaids(); });
+}
+function pastDay(s) { return new Intl.DateTimeFormat(LOC, { weekday: "short", day: "2-digit", month: "2-digit", year: "2-digit" }).format(new Date(s.starts_at * 1000)); }
+function pastItem(s) {
+  var sm = sessFor(s), e = sm.e, a = e ? attendance(s, e) : null, mine = favChar(), w = mine ? whereIn(s, mine) : null, open = !!past.open[s.id];
+  var badge = !e ? '<span class="pbadge muted">' + esc(T("keine Session")) + "</span>"
+    : a.hasList ? '<span class="pbadge' + (a.missing.length ? "" : " pos") + '">' + esc(T("{0} von {1} da", a.came.length, a.planned)) + "</span>"
+    : '<span class="pbadge">' + esc(T("Session: {0}", e.name || T("ohne Namen"))) + "</span>";
+  var me = "";
+  if (mine && w) {
+    var was = e && a.hasList ? memberList(e).indexOf(mine) >= 0 : null;
+    me = '<span class="mine-where' + (was === true ? " pos" : was === false && w.k === "g" ? " neg" : "") + '">' + esc(mine) + ": " + esc(whereText(w)) +
+      (was === null ? "" : " · " + esc(was ? T("dabei") : T("nicht dabei gewesen"))) + "</span>";
+  }
+  return '<details class="setup past-item" data-pid="' + s.id + '"' + (open ? " open" : "") + "><summary>" +
+    '<span class="pdate">' + esc(pastDay(s)) + '</span><b class="ptitle">' + esc(s.title) + '</b><span class="muted">' + esc(T("{0} Spieler", s.size)) + "</span>" + badge + me + "</summary>" +
+    (open ? '<div class="past-body">' + countsHtml(s.data || {}, s.size) + setupView(s, false) + sessBlock(s) +
+      (isOfficer() ? '<p class="note"><button class="btn small" type="button" data-edit="' + s.id + '">' + esc(T("Bearbeiten")) + "</button></p>" : "") + "</div>" : "") + "</details>";
+}
+function renderPast() {
+  var box = $("raidPast"); if (!box) return;
+  if (editS || (!past.loaded && !past.loading)) { box.hidden = !!editS; if (!editS) putHtml(box, ""); return; }
+  box.hidden = false;
+  if (past.missing) {
+    putHtml(box, isOfficer() ? '<p class="note" style="padding:12px 16px 0">' + esc(T("Für „Vergangene Raids“ in Supabase einmal die neue nexloot_konten.sql ausführen (siehe Anleitung).")) + "</p>" : "");
+    return;
+  }
+  var l = past.list, h = '<h2 class="past-h">' + esc(T("Vergangene Raids")) + "</h2>";
+  if (past.error && !l.length) h += '<p class="empty">' + esc(T("Fehler: {0}", past.error)) + "</p>";
+  else if (!l.length) h += '<p class="empty">' + esc(past.loading ? T("Lädt …") : T("Noch keine vergangenen Raids.")) + "</p>";
+  h += l.map(pastItem).join("");
+  if (past.more) h += '<div class="past-more"><button type="button" class="btn" data-act="pastmore"' + (past.loading ? " disabled" : "") + ">" + esc(T("Ältere laden")) + "</button></div>";
+  putHtml(box, h) && whRefresh();
+}
+function newSetup() {
+  var t = new Date(); t.setDate(t.getDate() + ((3 - t.getDay() + 7) % 7 || 7)); t.setHours(20, 0, 0, 0); // naechster Mittwoch 20 Uhr
+  editS = { id: null, rev: null, title: "", size: 20, when: Math.floor(t.getTime() / 1000), status: "draft", data: { groups: [[], [], [], []], bench: [], out: [] }, sel: null, q: "", lv: 55,
+    rh: "", rh0: "", rhOnly: false };
+  rhLoadEvents();
+  renderRaids(true); window.scrollTo(0, $("p-raids").offsetTop - 8);
+}
+function editSetup(id) {
+  var s = (setups.list || []).concat(past.list).filter(function (x) { return x.id === id; })[0]; if (!s) return;
+  var d = JSON.parse(JSON.stringify(s.data || {}));
+  d.groups = d.groups || []; d.bench = d.bench || []; d.out = d.out || [];
+  editS = { id: s.id, rev: s.rev, title: s.title, size: s.size, when: s.starts_at, status: s.status, data: d, sel: null, q: "", lv: 0,
+    rh: s.rh_event || "", rh0: s.rh_event || "", rhOnly: false };
+  rhLoadEvents(); if (editS.rh) rhLoadEvent(editS.rh);
+  renderRaids(true); window.scrollTo(0, $("p-raids").offsetTop - 8);
+}
+function placed(n) { var d = editS.data; return whereIn({ data: d }, n); }
+function moveTo(n, t) {
+  var d = editS.data, gn = groupsFor(editS.size);
+  while (d.groups.length < gn) d.groups.push([]);
+  if (/^g\d$/.test(t) && (d.groups[+t.slice(1)] || []).length >= 5 && (d.groups[+t.slice(1)] || []).indexOf(n) < 0) { flash(T("Die Gruppe ist voll (5 Spieler)."), true); return; }
+  d.groups = d.groups.map(function (g) { return (g || []).filter(function (x) { return x !== n; }); });
+  d.bench = d.bench.filter(function (x) { return x !== n; });
+  d.out = d.out.filter(function (x) { return x !== n; });
+  if (/^g\d$/.test(t)) d.groups[+t.slice(1)].push(n); else if (t === "bench") d.bench.push(n); else if (t === "out") d.out.push(n);
+  editS.sel = null; editS.dirty = true;
+  renderEdit();
+}
+function setSize(sz) {
+  var d = editS.data, gn = groupsFor(sz);
+  for (var i = gn; i < d.groups.length; i++) d.bench = d.bench.concat(d.groups[i] || []); // wegfallende Gruppen -> Ersatzbank
+  d.groups = d.groups.slice(0, gn);
+  while (d.groups.length < gn) d.groups.push([]);
+  editS.size = sz; editS.dirty = true; renderEdit();
+}
+function poolNames() {
+  var have = {}, out = [];
+  (guild.members || []).forEach(function (m) { if (!have[m.name]) { have[m.name] = true; out.push(m.name); } });
+  Object.keys((state.data && state.data.coins) || {}).forEach(function (n) { if (!have[n]) { have[n] = true; out.push(n); } });
+  return out;
+}
+// Spielerliste fuer den Planer hat sich geaendert (Gildenliste geladen, Sprache gewechselt)?
+function poolSig() {
+  return LANG + "|" + (guild.members || []).map(function (m) { return m.name + ":" + m.level + ":" + (m.role || "") + ":" + (m.class || ""); }).join(",") +
+    "|" + Object.keys((state.data && state.data.coins) || {}).join(",");
+}
+function renderEdit() {
+  var box = $("raidEdit"); if (!box || !editS) return;
+  box.hidden = false; editS.sig = poolSig();
+  var q = (editS.q || "").toLowerCase(), lv = +editS.lv || 0;
+  var rk = editS.rh && rh.ev[editS.rh] && rh.ev[editS.rh].data ? rhKinds(editS.rh) : null, rkOrd = { ok: 0, bench: 1, late: 2, tentative: 2, absent: 4 };
+  var pool = poolNames().filter(function (n) {
+    if (placed(n)) return false;
+    if (rk && editS.rhOnly && (!rk[n] || rk[n] === "absent")) return false;
+    var m = memberOf(n);
+    if (lv && m && +m.level < lv) return false;
+    return !q || (n + " " + (m ? className(m.class) : "")).toLowerCase().indexOf(q) >= 0;
+  }).sort(function (a, b) {
+    var x = memberOf(a), y = memberOf(b);
+    return (rk ? (rk[a] ? rkOrd[rk[a]] : 3) - (rk[b] ? rkOrd[rk[b]] : 3) : 0) || ((y ? +y.level : 0) - (x ? +x.level : 0)) || a.localeCompare(b, LOC);
+  });
+  var dt = editS.when ? new Date(editS.when * 1000) : null;
+  var local = dt ? new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "";
+  putHtmlKeep(box, rhEditRow() + '<div class="tools edit-tools">' +
+    '<input id="seTitle" maxlength="80" placeholder="' + esc(T("Titel, z. B. Onyxia")) + '" aria-label="' + esc(T("Titel")) + '" value="' + esc(editS.title) + '">' +
+    '<input id="seWhen" type="datetime-local" aria-label="' + esc(T("Datum und Uhrzeit")) + '" value="' + esc(local) + '">' +
+    '<span class="seg" role="group" aria-label="' + esc(T("Raidgröße")) + '">' + [10, 20, 40].map(function (z) {
+      return '<button type="button" data-size="' + z + '" aria-pressed="' + (editS.size === z ? "true" : "false") + '">' + z + "</button>"; }).join("") + "</span>" +
+    '<span class="count">' + esc(editS.status === "published" ? T("veröffentlicht") : T("Entwurf")) + "</span></div>" +
+    '<div class="edit-counts">' + countsHtml(editS.data, editS.size) + "</div>" +
+    '<div class="edit-wrap"><aside class="pool dz" data-t="pool"><div class="gh">' + esc(T("Spieler")) + ' <span class="muted">' + pool.length + "</span>" +
+    (editS.sel && placed(editS.sel) ? '<button type="button" class="btn small here" data-to="pool">' + esc(T("raus")) + "</button>" : "") + "</div>" +
+    '<input id="seQ" type="search" placeholder="' + esc(T("Suchen")) + '" aria-label="' + esc(T("Spieler suchen")) + '" value="' + esc(editS.q) + '">' +
+    '<select id="seLv" aria-label="' + esc(T("Level"))+ '">' + [[0, T("Alle Level")], [60, T("Level {0}", 60)], [55, T("ab Level {0}", 55)], [40, T("ab Level {0}", 40)]].map(function (o) {
+      return '<option value="' + o[0] + '"' + (+editS.lv === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select>" +
+    '<div class="pool-l">' + (pool.length ? pool.map(function (n) { return pchip(n, { edit: true, sel: editS.sel, lv: true, rk: rk }); }).join("") : '<span class="muted small">' + esc(T("niemand mehr frei")) + "</span>") + "</div></aside>" +
+    '<div class="edit-main"><p class="note">' + esc(editS.sel ? T("{0} ausgewählt - jetzt auf „hierher“ bei einer Gruppe tippen.", editS.sel) : T("Spieler in eine Gruppe ziehen oder antippen und dann „hierher“ wählen.")) + "</p>" +
+    setupView({ size: editS.size, data: editS.data }, true) + "</div></div>" +
+    '<div class="tools edit-foot"><button class="btn" type="button" data-act="cancel">' + esc(T("Abbrechen")) + "</button>" +
+    (editS.id ? '<button class="btn danger" type="button" data-act="delete">' + esc(T("Löschen")) + "</button>" : "") +
+    '<span class="count"></span><button class="btn" type="button" data-act="save-draft">' + esc(T("Als Entwurf speichern")) + "</button>" +
+    '<button class="btn primary" type="button" data-act="save-pub">' + esc(T("Veröffentlichen")) + "</button></div>");
+}
+function saveSetup(status) {
+  var title = ($("seTitle").value || "").trim(), w = $("seWhen").value;
+  if (!title) { flash(T("Bitte einen Titel eingeben."), true); $("seTitle").focus(); return; }
+  var when = w ? Math.floor(new Date(w).getTime() / 1000) : null;
+  var d = editS.data;
+  var data = { groups: d.groups.slice(0, groupsFor(editS.size)), bench: d.bench, out: d.out, notes: d.notes || {} };
+  var rhNew = editS.rh || "", rhOld = editS.rh0 || "";
+  rpc("nexloot_setup_save", { p_guild: G(), p_id: editS.id, p_rev: editS.rev, p_title: title, p_size: editS.size, p_starts_at: when, p_status: status, p_data: data }, true)
+    .then(function (s) {
+      var msg = status === "published" ? T("„{0}“ ist veröffentlicht.", s.title) : T("„{0}“ als Entwurf gespeichert.", s.title);
+      var link = rhNew !== rhOld ? rpc("nexloot_setup_rh_link", { p_guild: G(), p_id: s.id, p_event: rhNew || null }, true) : Promise.resolve(null);
+      return link.then(function () {
+        if (rhNew !== rhOld) rh.at = 0;
+        flash(msg + (rhNew && status === "published" ? " " + T("Mit „An Raid-Helper senden“ beim Setup kommt es in Discord.") : ""));
+      }, function (e) { flash(T("Gespeichert, aber das Raid-Helper-Event ließ sich nicht verknüpfen: {0}", e.message), true); })
+        .then(function () { editS = null; if (past.loaded) loadPast(false); return loadSetups(); });
+    }).catch(function (e) { flash(e.message, true); });
 }
 
 // ---------------------------------------------------------------- Bedienung
@@ -1137,6 +2691,150 @@ $("bSess").addEventListener("click", function (ev) {
   var tr = ev.target.closest("tr[data-sess]"); if (!tr) return;
   var k = tr.getAttribute("data-sess"); ui.open = (ui.open === k) ? "" : k; renderSess();
 });
+$("qGuild").addEventListener("input", function () { gui.q = this.value; renderGuild(); });
+[["gClass", "cls"], ["gRole", "role"], ["gLevel", "level"], ["gProf", "prof"]].forEach(function (x) { $(x[0]).addEventListener("change", function () { gui[x[1]] = this.value; renderGuild(); }); });
+$("gOnline").addEventListener("change", function () { gui.online = this.checked; renderGuild(); });
+$("gHead").addEventListener("click", function (ev) {
+  var th = ev.target.closest("th[data-sort]"); if (!th) return;
+  var k = th.dataset.sort;
+  if (gui.sort === k) gui.dir = -gui.dir; else { gui.sort = k; gui.dir = k === "name" ? 1 : -1; }
+  renderGuild();
+});
+// Anmelden, Mein Charakter, Raids, Verwaltung
+document.addEventListener("click", function (ev) {
+  var t = ev.target;
+  if (t.closest("#loginBtn")) { login(); return; }
+  var um = t.closest(".usermenu"); if (!um) Array.prototype.forEach.call(document.querySelectorAll(".usermenu[open]"), function (d) { d.open = false; });
+  var a = t.closest("[data-act]");
+  if (a) {
+    var act = a.getAttribute("data-act");
+    if (um) um.open = false;
+    if (act === "chars") openDlg("chars");
+    else if (act === "unlock") openDlg("unlock");
+    else if (act === "logout") logout();
+    else if (act === "close") closeDlg();
+    else if (act === "player") openPlayer(favChar());
+    else if (act === "raids") { ev.preventDefault(); showTab("raids"); }
+    else if (act === "newsetup") newSetup();
+    else if (act === "pastmore") loadPast(true);
+    else if (act === "emo-parse") emoParse();
+    else if (act === "rh-reload" && editS && editS.rh) { rhLoadEvents(true); rhLoadEvent(editS.rh, true); }
+    else if (act === "rh-import" && editS && editS.rh) rhImport();
+    else if (act === "emo-save") emoSave();
+    else if (act === "emo-reset") { emo.dirty = false; emo.unmatched = []; renderEmo(); }
+    else if (act === "ask-yes" || act === "ask-no") answerAsk(act === "ask-yes");
+    else if (act === "cancel") {
+      if (!editS || !editS.dirty) { editS = null; renderRaids(); return; }
+      askConfirm(T("Änderungen verwerfen?"), T("Verwerfen")).then(function (ok) { if (ok) { editS = null; renderRaids(); } });
+    }
+    else if (act === "save-draft") saveSetup("draft");
+    else if (act === "save-pub") saveSetup("published");
+    else if (act === "delete") {
+      if (!editS || !editS.id) return;
+      var delId = editS.id;
+      askConfirm(T("Setup „{0}“ wirklich löschen?", editS.title), T("Löschen")).then(function (ok) {
+        if (!ok) return;
+        rpc("nexloot_setup_delete", { p_guild: G(), p_id: delId }, true).then(function () { flash(T("Setup gelöscht.")); editS = null; if (past.loaded) loadPast(false); return loadSetups(); })
+          .catch(function (e) { flash(e.message, true); });
+      });
+    }
+    return;
+  }
+  var f = t.closest("[data-fav]"); if (f) { doClaim(f.getAttribute("data-fav"), true); return; }
+  var u = t.closest("[data-unclaim]");
+  if (u) {
+    rpc("nexloot_unclaim", { p_guild: G(), p_char: u.getAttribute("data-unclaim") }, true).then(function (me) { auth.me = me; render(); renderDlg(); })
+      .catch(function (e) { flash(e.message, true); });
+    return;
+  }
+  var ed = t.closest("[data-edit]"); if (ed) { editSetup(+ed.getAttribute("data-edit")); return; }
+  var rs = t.closest("[data-rhsend]"); if (rs) { rhSend(+rs.getAttribute("data-rhsend"), false); return; }
+  var rp = t.closest("[data-rhpost]");
+  if (rp) {
+    var rpId = +rp.getAttribute("data-rhpost");
+    askConfirm(T("Raid-Helper postet das Setup neu und erwähnt dabei alle Spieler noch einmal. Weiter?"), T("Neu posten")).then(function (ok) { if (ok) rhSend(rpId, true); });
+    return;
+  }
+  var rr = t.closest("[data-rhreload]"); if (rr) { rhLoadEvent(rr.getAttribute("data-rhreload"), true); return; }
+  var os = t.closest("[data-opensess]");
+  if (os) {
+    ui.open = os.getAttribute("data-opensess"); showTab("sessions"); renderSess();
+    var row = Array.prototype.filter.call(document.querySelectorAll("tr[data-sess]"), function (r) { return r.getAttribute("data-sess") === ui.open; })[0];
+    if (row && row.scrollIntoView) row.scrollIntoView({ block: "center" });
+    return;
+  }
+  var sz = t.closest("[data-size]"); if (sz && editS) { setSize(+sz.getAttribute("data-size")); return; }
+  var to = t.closest("[data-to]");
+  if (to && editS && editS.sel && to.closest("#raidEdit")) { moveTo(editS.sel, to.getAttribute("data-to")); return; }
+  var pc = t.closest("#raidEdit .pc[data-p]");
+  if (pc && editS) { var n = pc.getAttribute("data-p"); editS.sel = editS.sel === n ? null : n; renderEdit(); return; }
+  var ul = t.closest("[data-unlink]"); if (ul) { admCall("nexloot_link_set", { p_char: ul.getAttribute("data-unlink"), p_discord_id: "", p_discord_name: null, p_fav: false }); return; }
+  var ro = t.closest("[data-role]"); if (ro) { admCall("nexloot_role_set", { p_discord_id: ro.getAttribute("data-role"), p_role: ro.getAttribute("data-to") }); return; }
+});
+document.addEventListener("submit", function (ev) {
+  var f = ev.target;
+  if (f.matches(".claim[data-claim]")) { ev.preventDefault(); var c = (f.elements.c.value || "").trim(); if (c) doClaim(c, false); return; }
+  if (f.id === "unlockForm") {
+    ev.preventDefault();
+    var pw = f.elements.pw.value; f.elements.pw.value = "";
+    rpc("nexloot_unlock", { p_guild: G(), p_secret: pw }, true).then(function (me) { auth.me = me; closeDlg(); flash(T("Du bist jetzt als Offizier freigeschaltet.")); render(); loadSetups(); })
+      .catch(function (e) { flash(e.message, true); });
+    return;
+  }
+  if (f.matches(".linkf")) {
+    ev.preventDefault();
+    var did = f.getAttribute("data-did") || (f.elements.did && f.elements.did.value.trim()) || "", ch = f.elements.c.value;
+    if (!ch || !did) return;
+    admCall("nexloot_link_set", { p_char: ch, p_discord_id: did, p_discord_name: f.elements.dn ? f.elements.dn.value.trim() || null : null, p_fav: false });
+  }
+});
+document.addEventListener("change", function (ev) {
+  var t = ev.target;
+  if (t.id === "mineSwitch") doClaim(t.value, true);
+  else if (t.id === "seLv" && editS) { editS.lv = +t.value || 0; renderEdit(); }
+  else if (t.matches && t.matches("select[data-sesssel]")) setSess(+t.getAttribute("data-sesssel"), t.value);
+  else if (t.id === "seRh" && editS) rhPick(t.value);
+  else if (t.id === "seRhOnly" && editS) { editS.rhOnly = t.checked; renderEdit(); }
+  else if (t.id === "seWhen" && editS) { editS.when = t.value ? Math.floor(new Date(t.value).getTime() / 1000) : null; editS.dirty = true; }
+});
+document.addEventListener("input", function (ev) {
+  var t = ev.target;
+  if (t.id === "seTitle" && editS) { editS.title = t.value; editS.dirty = true; }
+  else if (t.id === "emoPaste") emo.paste = t.value;
+  else if (t.matches && t.matches("input[data-emo]")) { emo.draft[t.getAttribute("data-emo")] = t.value; emo.dirty = true; renderEmo(); }
+  else if (t.id === "seQ" && editS) {
+    editS.q = t.value; var pos = t.selectionStart; renderEdit();
+    var n = $("seQ"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { /* egal */ } }
+  }
+});
+// vergangene Raids auf-/zuklappen (der Inhalt entsteht erst beim Aufklappen)
+document.addEventListener("toggle", function (ev) {
+  var d = ev.target; if (!d.matches || !d.matches("details.past-item")) return;
+  var id = +d.getAttribute("data-pid"), open = d.open;
+  if (!!past.open[id] === open) return;
+  if (open) past.open[id] = true; else delete past.open[id];
+  renderPast();
+}, true);
+document.addEventListener("keydown", function (ev) {
+  var pc = ev.target.closest && ev.target.closest("#raidEdit .pc[data-p]");
+  if (pc && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); pc.click(); }
+});
+(function () { // Ziehen und Ablegen im Setup-Planer
+  var box = $("raidEdit");
+  box.addEventListener("dragstart", function (ev) {
+    var pc = ev.target.closest(".pc[data-p]"); if (!pc) return;
+    ev.dataTransfer.setData("text/plain", pc.getAttribute("data-p")); ev.dataTransfer.effectAllowed = "move";
+  });
+  box.addEventListener("dragover", function (ev) { var z = ev.target.closest(".dz"); if (z) { ev.preventDefault(); z.classList.add("over"); } });
+  box.addEventListener("dragleave", function (ev) { var z = ev.target.closest(".dz"); if (z && !z.contains(ev.relatedTarget)) z.classList.remove("over"); });
+  box.addEventListener("drop", function (ev) {
+    var z = ev.target.closest(".dz"); if (!z || !editS) return;
+    ev.preventDefault();
+    var n = ev.dataTransfer.getData("text/plain"); if (n) moveTo(n, z.getAttribute("data-t"));
+  });
+})();
+$("dlg").addEventListener("close", function () { dlgMode = null; if (dlgAsk) { var a = dlgAsk; dlgAsk = null; a.resolve(false); } }); // Esc = nein
+window.addEventListener("beforeunload", function (ev) { if (editS && editS.dirty) { ev.preventDefault(); ev.returnValue = ""; } });
 $("resetHist").addEventListener("click", function () { ui.player = ""; ui.session = ""; ui.type = ""; $("sType").value = ""; $("qHist").value = ""; fillSelects(); renderHist(); });
 $("bCoins").addEventListener("click", function (ev) {
   if (ev.target.closest("a")) return; // Wowhead-Link
@@ -1152,6 +2850,11 @@ $("pHist").addEventListener("click", function () {
 $("reloadBtn").addEventListener("click", function () { $("stateText").textContent = "Lädt …"; load(); });
 document.addEventListener("visibilitychange", function () { if (!document.hidden && state.fetchedAt && Date.now() - state.fetchedAt > 20000) load(); });
 setInterval(function () { if (!document.hidden) load(); }, ((CFG && CFG.refreshSeconds) || 60) * 1000);
+authFromHash();
+authLoad();
+authCheck();
+renderAuth();
+if (auth.s) loadMe();
 (function () {
   var h = (location.hash || "").replace("#", "");
   var m = /^spieler=(.+)$/.exec(h);
