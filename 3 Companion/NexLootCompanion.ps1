@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'   # sonst ist Invoke-WebRequest in Windows PowerShell 5.1 sehr langsam
 . (Join-Path $PSScriptRoot 'NexLootCore.ps1')
 
-$script:AppVersion = '1.6.2'
+$script:AppVersion = '1.8.2'
 if (-not $DataDir) { $DataDir = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'NexLootCompanion' }
 $script:DataDir = $DataDir
 $script:ConfigPath = Join-Path $DataDir 'config.json'
@@ -62,6 +62,12 @@ function Get-NexCfg($Raw) {
         password = (Unprotect-NexSecret ([string]$Raw['password'])); name = [string]$Raw['name']
         svPath = [string]$Raw['svPath']; addonPath = [string]$Raw['addonPath']; webUrl = [string]$Raw['webUrl']
         discordUrl = (Unprotect-NexSecret ([string]$Raw['discord'])); discordSince = (Get-NexLong $Raw['discordSince'])
+        # 1.7: Gilden-Meilensteine (Standard: an), optional ein eigener Webhook dafuer
+        discordMs = ($Raw['discordMilestones'] -ne $false); msUrl = (Unprotect-NexSecret ([string]$Raw['discordMsHook'])); msSince = (Get-NexLong $Raw['msSince'])
+        # 1.8: Raid-Setups aus der Webapp (Standard: an), optional ein eigener Webhook dafuer
+        discordSetups = ($Raw['discordSetups'] -ne $false); setupUrl = (Unprotect-NexSecret ([string]$Raw['discordSetupHook']))
+        # 1.8.1: die Spieler im Setup erwaehnen (@Name; nur wer in der Webapp mit Discord verknuepft ist)
+        discordSetupPing = ($Raw['discordSetupPing'] -ne $false)
     }
 }
 
@@ -211,7 +217,7 @@ function Show-NexSetup($Raw) {
     $f.Text = 'NexLoot Companion - Einrichtung'
     $f.FormBorderStyle = 'FixedDialog'; $f.MaximizeBox = $false; $f.MinimizeBox = $false
     $f.StartPosition = 'CenterScreen'
-    $f.ClientSize = New-Object System.Drawing.Size(600, 640)
+    $f.ClientSize = New-Object System.Drawing.Size(600, 806)
     $f.Font = New-Object System.Drawing.Font('Segoe UI', 9)
     $f.Icon = New-NexIcon ([System.Drawing.Color]::FromArgb(255, 255, 209, 0))
     $f.TopMost = $true
@@ -246,6 +252,28 @@ function Show-NexSetup($Raw) {
     $dhint.Text = 'Nach jedem Raid eine Zusammenfassung in einen Discord-Kanal (Webhook: Kanal → Einstellungen → Integrationen). Geheim halten!'
     $dhint.SetBounds(186, $script:sy - 6, 400, 30); $dhint.ForeColor = [System.Drawing.Color]::FromArgb(255, 90, 90, 90); $f.Controls.Add($dhint)
     $script:sy += 28
+    # 1.7: Gilden-Meilensteine (Level 25/40/60) - in denselben Kanal oder einen eigenen
+    $msOn = New-Object System.Windows.Forms.CheckBox
+    $msOn.Text = 'Gilden-Meilensteine posten (Level 25 / 40 / 60, erster 60er)'; $msOn.SetBounds(186, $script:sy - 4, 400, 22); $msOn.Checked = $true; $f.Controls.Add($msOn)
+    $script:sy += 24
+    & $add 'Webhook Meilensteine:' 'discordMs' $true
+    $mhint = New-Object System.Windows.Forms.Label
+    $mhint.Text = 'Optional: eigener Kanal für die Meilensteine. Leer = derselbe Webhook wie oben.'
+    $mhint.SetBounds(186, $script:sy - 6, 400, 18); $mhint.ForeColor = [System.Drawing.Color]::FromArgb(255, 90, 90, 90); $f.Controls.Add($mhint)
+    $script:sy += 14
+    # 1.8: Raid-Setups aus der Webapp (eine Nachricht pro Setup, wird bei Aenderungen bearbeitet)
+    $dsOn = New-Object System.Windows.Forms.CheckBox
+    $dsOn.Text = 'Raid-Setups posten (aus der Webapp, wird bei Änderungen aktualisiert)'; $dsOn.SetBounds(186, $script:sy, 400, 22); $dsOn.Checked = $true; $f.Controls.Add($dsOn)
+    $script:sy += 24
+    # 1.8.1: Spieler im Setup erwaehnen (wie bei Raid-Helper)
+    $dsPing = New-Object System.Windows.Forms.CheckBox
+    $dsPing.Text = 'Spieler im Setup erwähnen (@Name, wer in der Webapp mit Discord verknüpft ist)'; $dsPing.SetBounds(186, $script:sy, 400, 22); $dsPing.Checked = $true; $f.Controls.Add($dsPing)
+    $script:sy += 28
+    & $add 'Webhook Raid-Setups:' 'discordSetup' $true
+    $shint = New-Object System.Windows.Forms.Label
+    $shint.Text = 'Optional: eigener Kanal für die Raid-Setups. Leer = derselbe Webhook wie oben.'
+    $shint.SetBounds(186, $script:sy - 6, 400, 18); $shint.ForeColor = [System.Drawing.Color]::FromArgb(255, 90, 90, 90); $f.Controls.Add($shint)
+    $script:sy += 14
     $y = $script:sy + 6
     $lw = New-Object System.Windows.Forms.Label
     $lw.Text = 'WoW (Konto mit NexLoot):'; $lw.SetBounds(14, $y + 3, 170, 20); $f.Controls.Add($lw)
@@ -261,13 +289,13 @@ function Show-NexSetup($Raw) {
     $status = New-Object System.Windows.Forms.Label
     $status.SetBounds(14, $y, 572, 54); $status.ForeColor = [System.Drawing.Color]::FromArgb(255, 60, 60, 60); $f.Controls.Add($status)
     $test = New-Object System.Windows.Forms.Button
-    $test.Text = 'Verbindung testen'; $test.SetBounds(14, 592, 150, 30); $f.Controls.Add($test)
+    $test.Text = 'Verbindung testen'; $test.SetBounds(14, 758, 150, 30); $f.Controls.Add($test)
     $dtest = New-Object System.Windows.Forms.Button
-    $dtest.Text = 'Discord testen'; $dtest.SetBounds(170, 592, 120, 30); $f.Controls.Add($dtest)
+    $dtest.Text = 'Discord testen'; $dtest.SetBounds(170, 758, 120, 30); $f.Controls.Add($dtest)
     $ok = New-Object System.Windows.Forms.Button
-    $ok.Text = 'Speichern'; $ok.SetBounds(386, 592, 96, 30); $f.Controls.Add($ok)
+    $ok.Text = 'Speichern'; $ok.SetBounds(386, 758, 96, 30); $f.Controls.Add($ok)
     $cancel = New-Object System.Windows.Forms.Button
-    $cancel.Text = 'Abbrechen'; $cancel.SetBounds(490, 592, 96, 30); $f.Controls.Add($cancel)
+    $cancel.Text = 'Abbrechen'; $cancel.SetBounds(490, 758, 96, 30); $f.Controls.Add($cancel)
     $f.AcceptButton = $ok; $f.CancelButton = $cancel
 
     $script:cands = Find-NexWowCandidates
@@ -281,6 +309,11 @@ function Show-NexSetup($Raw) {
         foreach ($k in @('url', 'key', 'guild', 'name', 'webUrl')) { if ($Raw.Contains($k)) { $fields[$k].Text = [string]$Raw[$k] } }
         if ($Raw.Contains('password')) { $fields['password'].Text = Unprotect-NexSecret ([string]$Raw['password']) }
         if ($Raw.Contains('discord')) { $fields['discord'].Text = Unprotect-NexSecret ([string]$Raw['discord']) }
+        if ($Raw.Contains('discordMsHook')) { $fields['discordMs'].Text = Unprotect-NexSecret ([string]$Raw['discordMsHook']) }
+        $msOn.Checked = ($Raw['discordMilestones'] -ne $false)
+        if ($Raw.Contains('discordSetupHook')) { $fields['discordSetup'].Text = Unprotect-NexSecret ([string]$Raw['discordSetupHook']) }
+        $dsOn.Checked = ($Raw['discordSetups'] -ne $false)
+        $dsPing.Checked = ($Raw['discordSetupPing'] -ne $false)
         if ($Raw['svPath']) {
             $idx = -1
             for ($i = 0; $i -lt $script:cands.Count; $i++) { if ($script:cands[$i].Sv -eq $Raw['svPath']) { $idx = $i } }
@@ -328,6 +361,18 @@ function Show-NexSetup($Raw) {
         $oldHook = ''; if ($null -ne $Raw -and $Raw.Contains('discord')) { $oldHook = Unprotect-NexSecret ([string]$Raw['discord']) }
         if ($dh -and $dh -eq $oldHook -and $Raw.Contains('discordSince')) { $r['discordSince'] = Get-NexLong $Raw['discordSince'] }
         elseif ($dh) { $r['discordSince'] = Get-NexUnixNow }
+        # 1.7: Meilensteine - ab wann posten: ab dem Einschalten bzw. ab einem neuen Webhook dafuer
+        $mh = $fields['discordMs'].Text.Trim()
+        $r['discordMsHook'] = Protect-NexSecret $mh
+        $r['discordMilestones'] = [bool]$msOn.Checked
+        $oldMs = ''; if ($null -ne $Raw -and $Raw.Contains('discordMsHook')) { $oldMs = Unprotect-NexSecret ([string]$Raw['discordMsHook']) }
+        $wasOn = ($null -ne $Raw -and $Raw['discordMilestones'] -ne $false -and $Raw.Contains('msSince'))
+        if ($msOn.Checked -and $wasOn -and $mh -eq $oldMs) { $r['msSince'] = Get-NexLong $Raw['msSince'] }
+        elseif ($msOn.Checked) { $r['msSince'] = Get-NexUnixNow }
+        # 1.8: Raid-Setups
+        $r['discordSetupHook'] = Protect-NexSecret ($fields['discordSetup'].Text.Trim())
+        $r['discordSetups'] = [bool]$dsOn.Checked
+        $r['discordSetupPing'] = [bool]$dsPing.Checked
         if ($combo.SelectedIndex -ge 0) { $c = $script:cands[$combo.SelectedIndex]; $r['svPath'] = $c.Sv; $r['addonPath'] = $c.Addon }
         if ($null -ne $Raw) { foreach ($k in @($Raw.Keys)) { if (([string]$k).StartsWith('mail')) { $r[$k] = $Raw[$k] } } } # Sicherung per Mail bleibt
         return $r
@@ -345,12 +390,25 @@ function Show-NexSetup($Raw) {
     })
     $dtest.Add_Click({
         $u = $fields['discord'].Text.Trim()
-        if (-not (Test-NexWebhookUrl $u)) { $status.Text = 'Discord: bitte die Webhook-Adresse aus Discord einfügen (https://discord.com/api/webhooks/…).'; return }
+        $mu = $fields['discordMs'].Text.Trim()
+        $su = $fields['discordSetup'].Text.Trim()
+        if (-not (Test-NexWebhookUrl $u) -and -not $mu -and -not $su) { $status.Text = 'Discord: bitte die Webhook-Adresse aus Discord einfügen (https://discord.com/api/webhooks/…).'; return }
+        if ($mu -and -not (Test-NexWebhookUrl $mu)) { $status.Text = 'Webhook Meilensteine: Die Adresse sieht nicht richtig aus (https://discord.com/api/webhooks/…).'; return }
+        if ($su -and -not (Test-NexWebhookUrl $su)) { $status.Text = 'Webhook Raid-Setups: Die Adresse sieht nicht richtig aus (https://discord.com/api/webhooks/…).'; return }
         $status.Text = 'Discord: sende Test …'; $f.Refresh()
-        $p = [ordered]@{ username = 'NexLoot'; content = 'NexLoot Companion: Test – der Webhook funktioniert. Nach jedem Raid kommt hier die Zusammenfassung.'
-            allowed_mentions = [ordered]@{ parse = (New-Object System.Collections.ArrayList) } }
-        $res = Send-NexDiscord $u $p
-        if ($res.Ok) { $status.Text = 'Discord: Testnachricht gesendet – schau in den Kanal.' } else { $status.Text = $res.Message }
+        $none = [ordered]@{ parse = (New-Object System.Collections.ArrayList) }
+        $msgs = @()
+        if (Test-NexWebhookUrl $u) { $msgs += , @($u, 'NexLoot Companion: Test – der Webhook funktioniert. Nach jedem Raid kommt hier die Zusammenfassung.') }
+        if ($mu) { $msgs += , @($mu, 'NexLoot Companion: Test – hier kommen die Gilden-Meilensteine (Level 25, 40, 60).') }
+        if ($su) { $msgs += , @($su, 'NexLoot Companion: Test – hier kommen die Raid-Setups aus der Webapp.') }
+        $okAll = $true; $err = ''
+        foreach ($x in $msgs) {
+            $res = Send-NexDiscord $x[0] ([ordered]@{ username = 'NexLoot'; content = $x[1]; allowed_mentions = $none })
+            if (-not $res.Ok) { $okAll = $false; $err = $res.Message }
+        }
+        if ($okAll -and $msgs.Count -gt 1) { $status.Text = 'Discord: ' + $msgs.Count + ' Testnachrichten gesendet – schau in die Kanäle.' }
+        elseif ($okAll) { $status.Text = 'Discord: Testnachricht gesendet – schau in den Kanal.' }
+        else { $status.Text = $err }
     })
     $script:setupResult = $null
     $ok.Add_Click({
@@ -365,6 +423,10 @@ function Show-NexSetup($Raw) {
         if ($miss.Count -gt 0) { $status.Text = 'Bitte ausfüllen: ' + ($miss -join ', '); return }
         $dh = $fields['discord'].Text.Trim()
         if ($dh -and -not (Test-NexWebhookUrl $dh)) { $status.Text = 'Discord-Webhook: Die Adresse sieht nicht richtig aus (https://discord.com/api/webhooks/…). Feld leer lassen, wenn du keinen willst.'; return }
+        $mh = $fields['discordMs'].Text.Trim()
+        if ($mh -and -not (Test-NexWebhookUrl $mh)) { $status.Text = 'Webhook Meilensteine: Die Adresse sieht nicht richtig aus (https://discord.com/api/webhooks/…). Feld leer lassen = derselbe Webhook.'; return }
+        $shk = $fields['discordSetup'].Text.Trim()
+        if ($shk -and -not (Test-NexWebhookUrl $shk)) { $status.Text = 'Webhook Raid-Setups: Die Adresse sieht nicht richtig aus (https://discord.com/api/webhooks/…). Feld leer lassen = derselbe Webhook.'; return }
         try { Set-NexAutostart $auto.Checked } catch { Write-NexLog ('Autostart: ' + $_.Exception.Message) }
         $script:setupResult = $r
         $f.Close()
@@ -511,6 +573,38 @@ function Invoke-NexTick([switch] $Force) {
                 $script:lastDiscordError = $dres.Error
             } catch { Write-NexLog ('Discord: ' + $_.Exception.Message.Replace($script:cfg.discordUrl, '(Webhook)')) }
         }
+        # 1.7: Gildenliste hochladen (Gildenuebersicht), Meilensteine posten
+        try {
+            $ro = Invoke-NexRoster $ctx $res
+            if ($ro.Uploaded) { Write-NexLog $ro.Message }
+            if ($ro.Info) { Write-NexLog $ro.Info }
+            if ($ro.Error -and $ro.Error -ne $script:lastRosterError) { Write-NexLog $ro.Error; Show-NexBalloon $ro.Error 'Warning' }
+            if ($ro.Uploaded -or $ro.Error) { $script:lastRosterError = $ro.Error }
+            if ($ro.Uploaded) { $script:lastRoster = $ro }
+            $mres = Invoke-NexMilestones $ctx 0 -Force:($ro.Milestones -gt 0)
+            if ($mres.Posted -gt 0) { Write-NexLog $mres.Message; Show-NexBalloon $mres.Message 'Info' }
+            if ($mres.Error -and $mres.Error -ne $script:lastMsError) {
+                Write-NexLog $mres.Error
+                if ($mres.Error -notmatch 'nexloot_gilde\.sql') { Show-NexBalloon $mres.Error 'Warning' } # (dazu kam schon die Meldung der Gildenliste)
+            }
+            $script:lastMsError = $mres.Error
+        } catch {
+            $em = $_.Exception.Message
+            foreach ($u in @($script:cfg.discordUrl, $script:cfg.msUrl)) { if ($u) { $em = $em.Replace($u, '(Webhook)') } }
+            Write-NexLog ('Gildenliste: ' + $em)
+        }
+        # 1.8: Raid-Setups aus der Webapp nach Discord (neu, geaendert, entfernt)
+        try {
+            $sres = Invoke-NexSetupPosts $ctx
+            if ($sres.Message) { Write-NexLog $sres.Message; Show-NexBalloon $sres.Message 'Info' }
+            if ($sres.Info) { Write-NexLog $sres.Info }
+            if ($sres.Error -and $sres.Error -ne $script:lastSetupError) { Write-NexLog $sres.Error; Show-NexBalloon $sres.Error 'Warning' }
+            $script:lastSetupError = $sres.Error
+        } catch {
+            $em = $_.Exception.Message
+            foreach ($u in @($script:cfg.discordUrl, $script:cfg.setupUrl)) { if ($u) { $em = $em.Replace($u, '(Webhook)') } }
+            Write-NexLog ('Raid-Setups: ' + $em)
+        }
         if ($null -ne $script:mail -and $script:mail.on) {
             try {
                 $bres = Invoke-NexBackup $ctx $script:mail
@@ -558,6 +652,22 @@ function Show-NexStatusBox {
     $lines += 'Addon-Ordner: ' + $script:cfg.addonPath
     $lines += 'Gilde: ' + $script:cfg.guild + '   Name: ' + $script:cfg.name
     if ($script:cfg.discordUrl) { $lines += 'Discord: Webhook eingetragen – nach jedem Raid eine Zusammenfassung, mittwochs der Verfall' } else { $lines += 'Discord: aus (kein Webhook eingetragen)' }
+    if (-not $script:cfg.discordMs) { $lines += 'Gilden-Meilensteine: aus' }
+    elseif ($script:cfg.msUrl) { $lines += 'Gilden-Meilensteine: an (eigener Webhook)' }
+    elseif ($script:cfg.discordUrl) { $lines += 'Gilden-Meilensteine: an (derselbe Kanal)' }
+    else { $lines += 'Gilden-Meilensteine: an, aber kein Webhook eingetragen' }
+    if (-not $script:cfg.discordSetups) { $lines += 'Raid-Setups in Discord: aus' }
+    elseif ($script:cfg.setupUrl) { $lines += 'Raid-Setups in Discord: an (eigener Webhook)' + $(if ($script:cfg.discordSetupPing) { ', mit @-Erwähnungen' } else { '' }) }
+    elseif ($script:cfg.discordUrl) { $lines += 'Raid-Setups in Discord: an (derselbe Kanal)' + $(if ($script:cfg.discordSetupPing) { ', mit @-Erwähnungen' } else { '' }) }
+    else { $lines += 'Raid-Setups in Discord: an, aber kein Webhook eingetragen' }
+    $sf = $script:state['setupsFeed']
+    if ($sf -is [System.Collections.IDictionary]) { $lines += 'Raid-Setups fürs Spiel: ' + @($sf['list']).Count + ' veröffentlicht (Stand ' + (Format-NexDate (Get-NexLong $sf['at']) 'dd.MM. HH:mm') + ')' }
+    $ra = Get-NexLong $script:state['rosterAt']
+    if ($ra -gt 0) {
+        $gl = 'Gildenliste: zuletzt hochgeladen ' + (Format-NexDate $ra 'dd.MM. HH:mm')
+        if ($script:lastRoster) { $gl += ' (' + $script:lastRoster.Members + ' Mitglieder)' }
+        $lines += $gl
+    } else { $lines += 'Gildenliste: noch nicht hochgeladen (kommt von Offizieren mit NexLoot 0.29)' }
     if ($null -ne $script:mail -and $script:mail.on) {
         $bl = 'Sicherung per Mail: an ' + $script:mail.to + ', jeden Abend ab ' + $script:mail.hour + ' Uhr'
         $ba = Get-NexLong $script:state['backupAt']
@@ -660,6 +770,7 @@ function Start-NexTray {
     $script:lastError = ''
     $script:lastDiscordError = ''
     $script:lastBackupError = ''
+    $script:lastSetupError = ''
     $script:timer = New-Object System.Windows.Forms.Timer
     $script:timer.Interval = 3000
     $script:timer.Add_Tick({ Invoke-NexTick })

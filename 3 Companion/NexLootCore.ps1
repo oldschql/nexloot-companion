@@ -619,6 +619,11 @@ function ConvertTo-NexState($db, [long] $rev = -1) {
         $co['c'] = $cc
         $st['choices'] = $co
     }
+    # 1.7: Gildenlisten und Spieler-Infos (NexLoot 0.29, nur Offiziere) - nur fuer die Gildenuebersicht, nie in nexloot_state
+    $rs = Get-NexField $db 'rosters'
+    if ($rs -is [System.Collections.IDictionary]) { $st['_rosters'] = $rs }
+    $mi = Get-NexField $db 'minfo'
+    if ($mi -is [System.Collections.IDictionary]) { $st['_minfo'] = $mi }
     return $st
 }
 
@@ -1028,7 +1033,7 @@ function Write-NexFileAtomic([string] $Path, [string] $Text) {
 }
 
 # WebData.lua: das liest das Addon beim Laden (nach Login oder /reload)
-function Write-NexWebData([string] $Path, $target, $baseRev, [long] $checkedAt) {
+function Write-NexWebData([string] $Path, $target, $baseRev, [long] $checkedAt, $setups = $null) {
     $w = New-Object System.Collections.Specialized.OrderedDictionary
     foreach ($k in @('rev', 'coins', 'history', 'lastDecay', 'perm', 'wipes', 'choices')) { $w[$k] = $target[$k] }
     $sl = New-Object System.Collections.ArrayList # Sessions ohne Teilnehmer/Discord-Merker (braucht das Addon nicht)
@@ -1051,6 +1056,7 @@ function Write-NexWebData([string] $Path, $target, $baseRev, [long] $checkedAt) 
     $w['sessions'] = $sl
     if ($null -ne $baseRev) { $w['baseRev'] = [long]$baseRev }
     $w['checkedAt'] = $checkedAt
+    if ($null -ne $setups) { $w['setups'] = $setups } # 1.8: veroeffentlichte Raid-Setups (NexLoot 0.30)
     $text = "-- NexLoot: Stand aus der Webapp. Geschrieben von der NexLoot-Companion-App am " +
         [DateTime]::Now.ToString('dd.MM.yyyy HH:mm:ss', $script:NexInv) + ".`n-- Nicht von Hand bearbeiten.`nNexLootWebData = " +
         (ConvertTo-NexLua $w) + "`n"
@@ -1113,12 +1119,13 @@ function Format-NexConflictReport($d, $L, $W, $items) {
 function Invoke-NexSync($ctx) {
     $cfg = $ctx.cfg
     $state = $ctx.state
-    $res = @{ Action = 'none'; Message = ''; Notify = $false; Conflict = $false; ReportPath = $null; WebRev = $null; LocalRev = $null; Target = $null; Web = $null }
+    $res = @{ Action = 'none'; Message = ''; Notify = $false; Conflict = $false; ReportPath = $null; WebRev = $null; LocalRev = $null; Target = $null; Web = $null; Local = $null }
     $L = $null
     try { $L = Read-NexSV $cfg.svPath } catch {
         $res.Action = 'svError'; $res.Message = 'WoW-Daten gerade nicht lesbar (WoW speichert noch?): ' + $_.Exception.Message
         return $res
     }
+    $res.Local = $L # (1.7: Gildenliste fuer Invoke-NexRoster)
     $W = Get-NexWeb $cfg
     if ($null -ne $L) { $res.LocalRev = [long]$L['rev'] }
     if ($null -ne $W) { $res.WebRev = [long]$W['rev'] }
@@ -1153,14 +1160,19 @@ function Invoke-NexSync($ctx) {
         }
     }
 
+    # 1.8: Raid-Setups aus der Webapp (hoechstens jede Minute abfragen; klappt das nicht, bleibt der letzte Stand)
+    $setups = $null
+    try { [void](Update-NexSetupsFeed $ctx $now) } catch { }
+    if ($state.Contains('setupsFeed') -and $state['setupsFeed'] -is [System.Collections.IDictionary]) { $setups = $state['setupsFeed'] }
     if ($null -ne $target -and $cfg.addonPath) {
         $wdPath = Join-Path $cfg.addonPath 'WebData.lua'
-        $h = Get-NexSha256 ((ConvertTo-NexJson $target['rev']) + (Get-NexCoreJson $target) + (ConvertTo-NexJson $target['perm']) + (ConvertTo-NexJson $target['sessions']) + (ConvertTo-NexJson $target['wipes']))
+        $sh = ''; if ($null -ne $setups) { $sh = [string]$setups['h'] }
+        $h = Get-NexSha256 ((ConvertTo-NexJson $target['rev']) + (Get-NexCoreJson $target) + (ConvertTo-NexJson $target['perm']) + (ConvertTo-NexJson $target['sessions']) + (ConvertTo-NexJson $target['wipes']) + $sh)
         $baseRev = $null; if ($null -ne $L) { $baseRev = [long]$L['rev'] }
         $last = $null; if ($state.Contains('webData')) { $last = $state['webData'] }
         $stale = ($null -eq $last) -or ($last['hash'] -ne $h) -or ((Get-NexLong $last['baseRev'] (-1)) -ne (Get-NexLong $baseRev (-1))) -or ($now - (Get-NexLong $last['at']) -ge 1200) -or -not (Test-Path -LiteralPath $wdPath)
         if ($stale -and (Test-Path -LiteralPath $cfg.addonPath)) {
-            Write-NexWebData $wdPath $target $baseRev $now
+            Write-NexWebData $wdPath $target $baseRev $now $setups
             $state['webData'] = [ordered]@{ hash = $h; rev = [long]$target['rev']; baseRev = $baseRev; at = $now }
         }
     }
@@ -1756,6 +1768,519 @@ function Invoke-NexDiscord($ctx, $res, [long] $Now = 0) {
         Invoke-NexDecayPost $ctx $target $Now $jit $out
         if ($p0 -gt 0 -and $out.Posted -gt $p0) { $out.Message = $m0 + ' ' + $out.Message }
     }
+    return $out
+}
+
+# ---------------------------------------------------------------------------------------------
+# 1.7: Gildenuebersicht und Meilensteine (NexLoot 0.29)
+# Das Addon eines Offiziers merkt sich die Gildenliste (NexLootDB.rosters[Gilde]) und die Infos der Spieler
+# (NexLootDB.minfo: Rolle, Talente, Berufe). Nach jedem Speichern im Spiel laedt die App die Liste hoch
+# (nexloot_roster). Die Datenbank erkennt Level 25/40/60 und traegt jeden Meilenstein genau einmal ein.
+# Eine App mit Discord-Webhook holt neue Meilensteine ab (nexloot_ms_claim reserviert sie, damit nur einer
+# postet) und postet sie; klappt das Posten nicht, gibt sie sie wieder frei (nexloot_ms_release).
+# ---------------------------------------------------------------------------------------------
+$script:NexClassDe = @{ WARRIOR = 'Krieger'; PALADIN = 'Paladin'; HUNTER = 'Jäger'; ROGUE = 'Schurke'; PRIEST = 'Priester'
+    SHAMAN = 'Schamane'; MAGE = 'Magier'; WARLOCK = 'Hexenmeister'; DRUID = 'Druide'; DEATHKNIGHT = 'Todesritter'; MONK = 'Mönch'
+    DEMONHUNTER = 'Dämonenjäger'; EVOKER = 'Rufer' }
+
+# Welche Gildenliste? Die mit dem eingerichteten Gildennamen; gibt es nur eine, die (Kennung kann anders heissen)
+function Select-NexRoster($L, [string] $Guild) {
+    $out = @{ Name = ''; R = $null; Exact = $false; Names = @() }
+    if ($null -eq $L) { return $out }
+    $rs = $L['_rosters']
+    if (-not ($rs -is [System.Collections.IDictionary]) -or $rs.Count -eq 0) { return $out }
+    $out.Names = @($rs.Keys | ForEach-Object { [string]$_ })
+    $want = ([string]$Guild).Trim().ToLowerInvariant()
+    foreach ($k in $rs.Keys) {
+        if (([string]$k).Trim().ToLowerInvariant() -eq $want -and $rs[$k] -is [System.Collections.IDictionary]) { $out.Name = [string]$k; $out.R = $rs[$k]; $out.Exact = $true; return $out }
+    }
+    if ($rs.Count -eq 1) { foreach ($k in $rs.Keys) { if ($rs[$k] -is [System.Collections.IDictionary]) { $out.Name = [string]$k; $out.R = $rs[$k] } } }
+    return $out
+}
+
+# Mitglieder fuer nexloot_roster: Gildenliste + Infos der Spieler
+function ConvertTo-NexRosterMembers($R, $Minfo) {
+    $list = New-Object System.Collections.ArrayList
+    $m = ConvertTo-NexMap (Get-NexField $R 'm')
+    $mi = ConvertTo-NexMap $Minfo
+    foreach ($n in (Get-NexSortedKeys $m)) {
+        $e = $m[$n]
+        if (-not ($e -is [System.Collections.IDictionary]) -or -not ([string]$n)) { continue }
+        $x = New-Object System.Collections.Specialized.OrderedDictionary
+        $x['n'] = [string]$n
+        $x['l'] = Get-NexLong (Get-NexField $e 'l')
+        foreach ($k in @('c', 'r')) { $v = Get-NexField $e $k; if ($v -is [string] -and $v -ne '') { $x[$k] = $v } }
+        foreach ($k in @('ri', 'lo', 'lt')) { $v = Get-NexField $e $k; if ($null -ne $v -and (Test-NexNumber $v)) { $x[$k] = Get-NexLong $v } }
+        if ((Get-NexField $e 'on') -eq $true) { $x['on'] = $true }
+        $i = $null; if ($mi.Contains([string]$n)) { $i = $mi[[string]$n] }
+        if ($i -is [System.Collections.IDictionary]) {
+            foreach ($k in @('ro', 't', 'sp')) { $v = Get-NexField $i $k; if ($v -is [string] -and $v -ne '') { $x[$k] = $v } }
+            $po = New-Object System.Collections.Specialized.OrderedDictionary
+            $p = ConvertTo-NexMap (Get-NexField $i 'p')
+            foreach ($k in (Get-NexSortedKeys $p)) { if ([string]$k -cmatch '^[A-Z]{2,3}$' -and (Test-NexNumber $p[$k])) { $po[[string]$k] = Get-NexLong $p[$k] } }
+            $x['p'] = $po
+            $x['ia'] = Get-NexLong (Get-NexField $i 'ia')
+        }
+        [void]$list.Add($x)
+    }
+    return , $list
+}
+
+function Test-NexMissingRpc([string] $Msg, [string] $Fn) {
+    return ($Msg -match [regex]::Escape($Fn) -and $Msg -match 'find|exist|schema cache')
+}
+
+# Nach dem Abgleich: Gildenliste hochladen, wenn das Spiel eine neue gespeichert hat. $res = Ergebnis von Invoke-NexSync
+function Invoke-NexRoster($ctx, $res, [long] $Now = 0) {
+    $cfg = $ctx.cfg
+    $state = $ctx.state
+    $out = @{ Uploaded = $false; Members = 0; Milestones = 0; Message = ''; Error = ''; Info = '' }
+    if ($Now -le 0) { $Now = Get-NexUnixNow }
+    if ($null -eq $res -or $null -eq $res.Local) { return $out }
+    $sel = Select-NexRoster $res.Local ([string]$cfg.guild)
+    if ($null -eq $sel.R) {
+        if ($sel.Names.Count -gt 1) {
+            $key = ($sel.Names | Sort-Object) -join '|'
+            if ([string]$state['rosterSkip'] -ne $key) { $out.Error = 'Gildenliste: im Spiel gibt es Listen von mehreren Gilden (' + ($sel.Names -join ', ') + '), keine heißt „' + $cfg.guild + '“ – nicht hochgeladen.' }
+            $state['rosterSkip'] = $key
+        }
+        return $out
+    }
+    $R = $sel.R
+    $at = Get-NexLong (Get-NexField $R 'at')
+    if ($at -le 0 -or $at -le (Get-NexLong $state['rosterAt'])) { return $out }
+    if ($state.Contains('rosterWait') -and (Get-NexLong $state['rosterWait']) -gt $Now) { return $out }
+    $members = ConvertTo-NexRosterMembers $R $res.Local['_minfo']
+    if ($members.Count -eq 0) { $state['rosterAt'] = $at; return $out }
+    $full = ((Get-NexField $R 'full') -eq $true)
+    $body = [ordered]@{ p_guild = $cfg.guild; p_members = $members; p_at = $at; p_full = $full; p_by = $cfg.name; p_secret = $cfg.password }
+    try {
+        $r = Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_roster' $body
+    } catch {
+        $msg = $_.Exception.Message
+        if (Test-NexMissingRpc $msg 'nexloot_roster') {
+            $out.Error = 'Gildenübersicht: In Supabase fehlt noch nexloot_gilde.sql (einmal im SQL Editor ausführen).'
+            $state['rosterWait'] = $Now + 3600
+        } else {
+            $out.Error = 'Gildenliste nicht hochgeladen: ' + $msg
+            $state['rosterWait'] = $Now + 300
+        }
+        return $out
+    }
+    $state['rosterAt'] = $at
+    $state.Remove('rosterWait')
+    $out.Uploaded = $true
+    $out.Members = Get-NexLong $r['members']
+    $out.Milestones = @($r['milestones']).Count
+    $out.Message = 'Gildenliste hochgeladen (' + $out.Members + ' Mitglieder'
+    if ($out.Milestones -gt 0) { $out.Message += ', ' + $out.Milestones + ' neue Meilensteine' }
+    $out.Message += ').'
+    if (-not $sel.Exact -and [string]$state['rosterGuild'] -ne $sel.Name) { $out.Info = 'Gildenliste der Gilde „' + $sel.Name + '“ (in der App eingerichtet: „' + $cfg.guild + '“).' }
+    $state['rosterGuild'] = $sel.Name
+    return $out
+}
+
+# Discord-Text fuer Meilensteine (eine Nachricht, oben die fruehesten)
+function New-NexMilestoneMessages($Items, [string] $WebUrl = '') {
+    $lines = New-Object System.Collections.ArrayList
+    foreach ($x in (@($Items) | Sort-Object @{ Expression = { Get-NexLong $_['at'] } }, @{ Expression = { Get-NexLong $_['id'] } })) {
+        $n = '**' + (ConvertTo-NexDiscordText ([string]$x['name'])) + '**'
+        $c = [string]$x['class']; if ($script:NexClassDe.ContainsKey($c)) { $n += ' (' + $script:NexClassDe[$c] + ')' }
+        $v = Get-NexLong $x['value']; $pl = Get-NexLong $x['place']
+        if ($v -eq 60) {
+            if ($pl -eq 1) { $l = (Get-NexEmoji 0x1F3C6) + ' ' + $n + ' ist **Level 60** – der erste 60er der Gilde!' }
+            elseif ($pl -ge 2 -and $pl -le 10) { $l = (Get-NexEmoji 0x1F3C6) + ' ' + $n + ' ist **Level 60** – Platz ' + $pl + ' in der Gilde.' }
+            else { $l = (Get-NexEmoji 0x1F3C6) + ' ' + $n + ' ist **Level 60**!' }
+        } elseif ($v -eq 40) {
+            $l = (Get-NexEmoji 0x2694, 0xFE0F) + ' ' + $n + ' hat **Level 40** erreicht – Legacy-Punkte verdient, und ab jetzt geht Dual-Spec (10 Gold beim Lehrer).'
+        } elseif ($v -eq 25) {
+            $l = (Get-NexEmoji 0x1F389) + ' ' + $n + ' hat **Level 25** erreicht – Legacy-Punkte verdient!'
+        } else {
+            $l = (Get-NexEmoji 0x1F389) + ' ' + $n + ' hat **Level ' + $v + '** erreicht.'
+        }
+        [void]$lines.Add($l)
+    }
+    $embeds = New-Object System.Collections.ArrayList
+    $parts = Split-NexLines $lines 3900
+    for ($j = 0; $j -lt $parts.Count; $j++) {
+        $em = [ordered]@{ description = $parts[$j]; color = 16765184 }
+        if ($j -eq 0) {
+            $em['title'] = (Get-NexEmoji 0x1F4E3) + ' Gilden-Meilensteine'
+            if ($WebUrl -match '^https?://') { $em['url'] = $WebUrl.TrimEnd('/') + '/#gilde' }
+        }
+        [void]$embeds.Add($em)
+    }
+    if ($embeds.Count -gt 0) { $embeds[$embeds.Count - 1]['footer'] = [ordered]@{ text = 'NexLoot · Gildenübersicht in der Webapp' } }
+    return ConvertTo-NexDiscordMsgList $embeds
+}
+
+# Neue Meilensteine abholen und posten (alle 5 Minuten oder gleich nach einem Upload mit neuen Meilensteinen)
+function Invoke-NexMilestones($ctx, [long] $Now = 0, [switch] $Force) {
+    $cfg = $ctx.cfg
+    $state = $ctx.state
+    $out = @{ Posted = 0; Message = ''; Error = '' }
+    $url = [string]$cfg.msUrl; if (-not $url) { $url = [string]$cfg.discordUrl }
+    if (-not $url -or -not $cfg.discordMs) { return $out }
+    if ($Now -le 0) { $Now = Get-NexUnixNow }
+    if ($state.Contains('msWait') -and (Get-NexLong $state['msWait']) -gt $Now) { return $out }
+    if (-not $Force -and ($Now - (Get-NexLong $state['msCheck'])) -lt 300) { return $out }
+    $state['msCheck'] = $Now
+    # nur neue (seit Webhook bzw. Einschalten, hoechstens 2 Tage alt)
+    $since = [math]::Max([math]::Max((Get-NexLong $cfg.discordSince), (Get-NexLong $cfg.msSince)), $Now - 2 * 86400)
+    try {
+        $list = Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_ms_claim' ([ordered]@{ p_guild = $cfg.guild; p_since = [long]$since; p_by = $cfg.name; p_secret = $cfg.password })
+    } catch {
+        $msg = $_.Exception.Message
+        if (Test-NexMissingRpc $msg 'nexloot_ms_claim') { $out.Error = 'Meilensteine: In Supabase fehlt noch nexloot_gilde.sql (einmal im SQL Editor ausführen).'; $state['msWait'] = $Now + 3600 }
+        else { $out.Error = 'Meilensteine: ' + $msg; $state['msWait'] = $Now + 300 }
+        return $out
+    }
+    $items = @($list | Where-Object { $_ -is [System.Collections.IDictionary] })
+    if ($items.Count -eq 0) { return $out }
+    $r = Send-NexDiscordAll $url (New-NexMilestoneMessages $items ([string]$cfg.webUrl))
+    if (-not $r.Ok) {
+        $ids = New-Object System.Collections.ArrayList
+        foreach ($x in $items) { [void]$ids.Add((Get-NexLong $x['id'])) }
+        try { [void](Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_ms_release' ([ordered]@{ p_guild = $cfg.guild; p_ids = $ids; p_secret = $cfg.password })) } catch { }
+        $out.Error = ([string]$r.Message).Replace($url, '(Webhook)')
+        if ($r.Retry -gt 0) { $state['msWait'] = $Now + $r.Retry } else { $state['msWait'] = $Now + 600 }
+        return $out
+    }
+    $out.Posted = $items.Count
+    if ($items.Count -eq 1) { $out.Message = 'Discord: Meilenstein von ' + [string]$items[0]['name'] + ' (Level ' + (Get-NexLong $items[0]['value']) + ') gepostet.' }
+    else { $out.Message = 'Discord: ' + $items.Count + ' Meilensteine gepostet.' }
+    return $out
+}
+
+# ---------------------------------------------------------------------------------------------
+# 1.8: Raid-Setups aus der Webapp - ins Spiel (WebData.lua, NexLoot 0.30) und nach Discord
+# Ins Spiel: die veroeffentlichten Setups (nexloot_setups_live, hoechstens jede Minute). Das Addon eines Offiziers
+# uebernimmt sie beim Einloggen bzw. /reload und verteilt sie an die Gilde.
+# Discord: eine Nachricht pro Setup. Aendert ein Offizier das Setup, wird die Nachricht bearbeitet; wird es geloescht
+# oder wieder Entwurf, wird sie entfernt. Die Datenbank sorgt dafuer, dass nur eine Companion-App postet.
+# ---------------------------------------------------------------------------------------------
+$script:NexPureDps = @{ MAGE = $true; WARLOCK = $true; ROGUE = $true; HUNTER = $true }
+
+# Webhook-Kennung (die Zahl in der Adresse) - die Adresse selbst ist geheim, die Kennung nicht
+function Get-NexHookId([string] $Url) {
+    if ($Url -match '/api/webhooks/(\d+)/') { return $Matches[1] }
+    return ''
+}
+
+function Get-NexSetupNames($v, [int] $Max) {
+    $l = New-Object System.Collections.ArrayList
+    foreach ($x in @($v)) {
+        if ($x -is [string] -and $x.Trim() -ne '' -and $l.Count -lt $Max) { [void]$l.Add($x.Trim()) }
+    }
+    return , $l
+}
+
+# Antwort von nexloot_setups_live -> was in WebData.lua steht (setups = { at, h, list, people })
+function ConvertTo-NexSetupsFeed($f) {
+    $o = New-Object System.Collections.Specialized.OrderedDictionary
+    $o['at'] = Get-NexLong $f['at']
+    $o['h'] = [string]$f['h']
+    $list = New-Object System.Collections.ArrayList
+    foreach ($s in @($f['setups'])) {
+        if (-not ($s -is [System.Collections.IDictionary])) { continue }
+        $e = New-Object System.Collections.Specialized.OrderedDictionary
+        $e['id'] = Get-NexLong $s['id']; $e['rev'] = Get-NexLong $s['rev']; $e['size'] = Get-NexLong $s['size']
+        $e['title'] = [string]$s['title']
+        if ((Get-NexLong $s['starts_at']) -gt 0) { $e['starts'] = Get-NexLong $s['starts_at'] }
+        if ($s['by']) { $e['by'] = [string]$s['by'] }
+        $d = $s['data']
+        $g = New-Object System.Collections.ArrayList
+        if ($d -is [System.Collections.IDictionary]) {
+            foreach ($grp in @($d['groups'])) { if ($g.Count -lt 8) { [void]$g.Add((Get-NexSetupNames $grp 5)) } }
+            $e['bench'] = Get-NexSetupNames $d['bench'] 100
+            $e['out'] = Get-NexSetupNames $d['out'] 200
+        }
+        $e['g'] = $g
+        [void]$list.Add($e)
+    }
+    $o['list'] = $list
+    $pp = New-Object System.Collections.Specialized.OrderedDictionary
+    $people = $f['people']
+    if ($people -is [System.Collections.IDictionary]) {
+        foreach ($n in $people.Keys) {
+            $p = $people[$n]
+            if ($p -is [System.Collections.IDictionary]) { $pp[[string]$n] = ([string]$p['c']) + ':' + ([string]$p['r']) }
+        }
+    }
+    $o['people'] = $pp
+    return $o
+}
+
+# Setups fuer das Spiel holen (hoechstens jede Minute; fehlt nexloot_konten.sql: eine Stunde Pause)
+function Update-NexSetupsFeed($ctx, [long] $Now = 0) {
+    $cfg = $ctx.cfg
+    $state = $ctx.state
+    if ($Now -le 0) { $Now = Get-NexUnixNow }
+    if ($state.Contains('setupsWait') -and (Get-NexLong $state['setupsWait']) -gt $Now) { return '' }
+    if (($Now - (Get-NexLong $state['setupsCheck'])) -lt 60) { return '' }
+    $state['setupsCheck'] = $Now
+    try {
+        $f = Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_setups_live' ([ordered]@{ p_guild = $cfg.guild })
+    } catch {
+        $msg = $_.Exception.Message
+        if (Test-NexMissingRpc $msg 'nexloot_setups_live') { $state['setupsWait'] = $Now + 3600 } else { $state['setupsWait'] = $Now + 300 }
+        return $msg
+    }
+    $state.Remove('setupsWait')
+    if ($f -is [System.Collections.IDictionary] -and (Get-NexLong $f['at']) -gt 0) { $state['setupsFeed'] = ConvertTo-NexSetupsFeed $f }
+    return ''
+}
+
+# Rolle eines Spielers (T/H/D) - ohne Angabe zaehlen reine Schadensklassen als Schaden (wie die Webapp)
+function Get-NexSetupRole($people, [string] $Name) {
+    $p = $null; if ($people -is [System.Collections.IDictionary] -and $people.Contains($Name)) { $p = $people[$Name] }
+    if ($null -eq $p) { return '' }
+    $r = [string]$p['r']; if ($r -in @('T', 'H', 'D')) { return $r }
+    if ($script:NexPureDps.ContainsKey([string]$p['c'])) { return 'D' }
+    return ''
+}
+
+function Get-NexSetupClass($people, [string] $Name) {
+    if ($people -is [System.Collections.IDictionary] -and $people.Contains($Name) -and $people[$Name] -is [System.Collections.IDictionary]) { return [string]$people[$Name]['c'] }
+    return ''
+}
+function Get-NexClassName([string] $Class) {
+    if ($script:NexClassDe.ContainsKey($Class)) { return $script:NexClassDe[$Class] }
+    return $Class
+}
+
+function Get-NexRoleEmoji([string] $Role) {
+    switch ($Role) {
+        'T' { return (Get-NexEmoji 0x1F6E1, 0xFE0F) }
+        'H' { return (Get-NexEmoji 0x1F49A) }
+        'D' { return (Get-NexEmoji 0x2694, 0xFE0F) }
+    }
+    return (Get-NexEmoji 0x25AB, 0xFE0F)
+}
+
+# 1.8.2: Klassen-Symbole (Discord-Emojis, in der Webapp unter Verwaltung eingetragen) - nur gueltige Codes bekannter Klassen
+function Get-NexClassEmojis($Map) {
+    $out = @{}
+    if (-not ($Map -is [System.Collections.IDictionary])) { return $out }
+    foreach ($k in @($Map.Keys)) {
+        $v = ([string]$Map[$k]).Trim()
+        if ($script:NexClassDe.ContainsKey([string]$k) -and $v -match '^<a?:[A-Za-z0-9_]{2,32}:\d{15,25}>$') { $out[[string]$k] = $v }
+    }
+    return $out
+}
+
+# Namen fuer ein Feld (hoechstens ~1000 Zeichen: Discord erlaubt 1024)
+function Join-NexSetupNames($Names, [string] $Sep = ', ', [int] $Max = 1000) {
+    $out = ''
+    $list = @($Names)
+    for ($i = 0; $i -lt $list.Count; $i++) {
+        $add = ConvertTo-NexDiscordText ([string]$list[$i])
+        if ($out) { $add = $Sep + $add }
+        $tail = ''; if ($i -lt $list.Count - 1) { $tail = ' … und ' + ($list.Count - $i - 1) + ' weitere' }
+        if (($out.Length + $add.Length + $tail.Length) -gt $Max) { return $out + ' … und ' + ($list.Count - $i) + ' weitere' }
+        $out += $add
+    }
+    return $out
+}
+
+# Discord-Nachricht zu einem Setup: Titel, Termin (Discord zeigt ihn jedem in seiner Zeitzone), Zaehler, Gruppen, Ersatzbank
+# Discord-Nachricht zu einem Setup (1.8.1: wie bei Raid-Helper - Gruppe fuer Gruppe untereinander, ein Spieler pro Zeile).
+# $Ids = Charakter -> Discord-Konto (aus der Webapp); $Ping = die Spieler aus Gruppen und Ersatzbank erwaehnen (@Name)
+# $Emojis (1.8.2) = Klasse -> Discord-Emoji: dann steht vorn das Klassen-Symbol und hinten nur bei Tank und Heiler die Rolle
+function New-NexSetupMessage($Job, $People, [string] $WebUrl = '', $Ids = $null, [bool] $Ping = $false, $Emojis = $null) {
+    $d = $Job['data']; if (-not ($d -is [System.Collections.IDictionary])) { $d = @{} }
+    $emo = Get-NexClassEmojis $Emojis
+    $size = Get-NexLong $Job['size'] 20
+    $ng = [int][math]::Max(1, [math]::Min(8, [math]::Round($size / 5)))
+    $groups = @($d['groups'])
+    $cnt = @{ T = 0; H = 0; D = 0; '' = 0 }; $n = 0
+    $cls = @{}
+    $glist = New-Object System.Collections.ArrayList   # pro Gruppe mit Spielern: @(Nummer, @(@(Name, Rolle, Klasse), ...))
+    $ment = New-Object System.Collections.ArrayList
+    $mentSeen = @{}
+    $addMention = {
+        param([string] $name)
+        if (-not $Ping -or -not ($Ids -is [System.Collections.IDictionary]) -or -not $Ids.Contains($name)) { return }
+        $id = [string]$Ids[$name]
+        if ($id -match '^\d{5,25}$' -and -not $mentSeen.ContainsKey($id) -and $ment.Count -lt 80) { $mentSeen[$id] = $true; [void]$ment.Add($id) }
+    }
+    for ($i = 0; $i -lt $ng; $i++) {
+        $g = New-Object System.Collections.ArrayList; if ($i -lt $groups.Count) { $g = Get-NexSetupNames $groups[$i] 5 } # (ArrayList, nicht in @() packen)
+        if ($g.Count -eq 0) { continue }
+        $rows = New-Object System.Collections.ArrayList
+        foreach ($name in $g) {
+            $r = Get-NexSetupRole $People $name
+            $cnt[$r]++; $n++
+            $c = Get-NexSetupClass $People $name
+            if ($c) { $cls[$c] = 1 + [int]$cls[$c] }
+            [void]$rows.Add(@($name, $r, $c))
+            & $addMention $name
+        }
+        [void]$glist.Add(@(($i + 1), $rows))
+    }
+    # Gruppe fuer Gruppe, ein Spieler pro Zeile: mit Klassen-Symbol vorn (und Tank/Heiler hinten), sonst die Rolle vorn
+    $fmt = {
+        param([bool] $useEmo)
+        $bl = New-Object System.Collections.ArrayList
+        foreach ($gr in $glist) {
+            $lines = New-Object System.Collections.ArrayList
+            [void]$lines.Add('**Gruppe ' + $gr[0] + ':**')
+            foreach ($x in $gr[1]) {
+                $nm = ConvertTo-NexDiscordText ([string]$x[0]); $rr = [string]$x[1]; $cc = [string]$x[2]
+                if ($useEmo -and $cc -and $emo.ContainsKey($cc)) {
+                    $line = $emo[$cc] + ' ' + $nm
+                    if ($rr -eq 'T' -or $rr -eq 'H') { $line += ' ' + (Get-NexRoleEmoji $rr) }
+                } else {
+                    $line = (Get-NexRoleEmoji $rr) + ' ' + $nm
+                }
+                [void]$lines.Add($line)
+            }
+            [void]$bl.Add($lines -join "`n")
+        }
+        return ($bl -join "`n`n")
+    }
+    $gtext = & $fmt $true
+    if ($emo.Count -gt 0 -and $gtext.Length -gt 3300) { $gtext = & $fmt $false } # sehr lange Namen: ohne Klassen-Symbole, damit alle Gruppen passen
+    $bench = Get-NexSetupNames $d['bench'] 100
+    $outl = Get-NexSetupNames $d['out'] 200
+    foreach ($name in $bench) { & $addMention $name }
+    $top = New-Object System.Collections.ArrayList
+    $t = Get-NexLong $Job['starts_at']
+    if ($t -gt 0) { [void]$top.Add((Get-NexEmoji 0x1F5D3, 0xFE0F) + ' <t:' + $t + ':F> (<t:' + $t + ':R>)') }
+    $c = '**' + $n + ' / ' + $size + '**  ·  ' + (Get-NexRoleEmoji 'T') + ' ' + $cnt['T'] + ' Tanks  ·  ' + (Get-NexRoleEmoji 'H') + ' ' + $cnt['H'] + ' Heiler  ·  ' +
+        (Get-NexRoleEmoji 'D') + ' ' + $cnt['D'] + ' Schaden'
+    if ($cnt[''] -gt 0) { $c += '  ·  ' + (Get-NexRoleEmoji '') + ' ' + $cnt[''] + ' ohne Angabe' }
+    [void]$top.Add($c)
+    if ($cls.Count -gt 0) {
+        $cl = @($cls.Keys | Sort-Object @{ Expression = { $cls[$_] }; Descending = $true }, @{ Expression = { Get-NexClassName $_ } })
+        [void]$top.Add((($cl | ForEach-Object { if ($emo.ContainsKey($_)) { $emo[$_] + ' ' + $cls[$_] } else { (Get-NexClassName $_) + ' ' + $cls[$_] } }) -join ' · '))
+    }
+    $desc = ($top -join "`n")
+    if ($glist.Count -gt 0) { $desc += "`n`n" + $gtext } else { $desc += "`n`n" + 'Noch niemand eingeteilt.' }
+    # Ersatzbank und "nicht dabei": was in die Beschreibung passt (hoechstens 4096 Zeichen)
+    $room = 4000 - $desc.Length
+    if ($bench.Count -gt 0 -and $room -gt 80) {
+        $x = "`n`n**Ersatzbank (" + $bench.Count + '):** ' + (Join-NexSetupNames $bench ', ' ([math]::Min(900, [math]::Floor($room / 2))))
+        $desc += $x; $room -= $x.Length
+    }
+    if ($outl.Count -gt 0 -and $room -gt 80) {
+        $desc += "`n" + '**Nicht dabei (' + $outl.Count + '):** ' + (Join-NexSetupNames $outl ', ' ([math]::Min(900, $room - 40)))
+    }
+    if ($desc.Length -gt 4090) { $desc = $desc.Substring(0, 4080).TrimEnd() + ' …' } # (Discord: hoechstens 4096 Zeichen)
+    $title = [string]$Job['title']; if ($title.Length -gt 200) { $title = $title.Substring(0, 200) }
+    $em = [ordered]@{ title = (ConvertTo-NexDiscordText $title); description = $desc; color = 3378418 }
+    if ($WebUrl -match '^https?://') { $em['url'] = $WebUrl.TrimEnd('/') + '/#raids' }
+    $ft = 'NexLoot'
+    if ($Job['by']) { $ft = 'Geplant von ' + [string]$Job['by'] + ' · NexLoot' }
+    $em['footer'] = [ordered]@{ text = $ft }
+    $at = Get-NexLong $Job['at']
+    if ($at -gt 0) { $em['timestamp'] = ([DateTime]'1970-01-01').AddSeconds([double]$at).ToString('yyyy-MM-ddTHH:mm:ss', $script:NexInv) + '.000Z' }
+    $list = New-Object System.Collections.ArrayList
+    [void]$list.Add($em)
+    $users = New-Object System.Collections.ArrayList
+    foreach ($id in $ment) { [void]$users.Add($id) }
+    # content immer mitschicken (auch leer): beim Bearbeiten verschwinden so alte Erwaehnungen
+    $content = (($ment | ForEach-Object { '<@' + $_ + '>' }) -join ' ')
+    return [ordered]@{ username = 'NexLoot'; content = $content; embeds = $list
+        allowed_mentions = [ordered]@{ parse = (New-Object System.Collections.ArrayList); users = $users } }
+}
+
+# Discord-Webhook: posten (mit ?wait=true, damit wir die Nachricht kennen), bearbeiten (PATCH), entfernen (DELETE)
+# Rueckgabe: @{ Ok; Id; Gone (Nachricht gibt es nicht mehr); Retry; Message } - ohne die Adresse
+function Invoke-NexWebhook([string] $Url, [string] $Method, [string] $MsgId, $Payload) {
+    $r = @{ Ok = $false; Id = ''; Gone = $false; Retry = 0; Message = '' }
+    if (-not $Url) { $r.Message = 'kein Webhook eingetragen'; return $r }
+    $u = $Url
+    if ($MsgId) { $u = $Url.TrimEnd('/') + '/messages/' + $MsgId } else { $u = $Url + '?wait=true' }
+    $params = @{ Uri = $u; Method = $Method; TimeoutSec = 20; UseBasicParsing = $true }
+    if ($null -ne $Payload) { $params['Body'] = [System.Text.Encoding]::UTF8.GetBytes((ConvertTo-NexJson $Payload)); $params['ContentType'] = 'application/json; charset=utf-8' }
+    try {
+        $resp = Invoke-WebRequest @params
+        $r.Ok = $true
+        if ($Method -ne 'DELETE') {
+            try {
+                $j = ConvertFrom-NexJson ([System.Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()))
+                if ($j -is [System.Collections.IDictionary] -and $j['id']) { $r.Id = [string]$j['id'] }
+            } catch { }
+        }
+        if (-not $r.Id -and $MsgId) { $r.Id = $MsgId }
+        return $r
+    } catch {
+        $code = 0
+        try { $code = [int]$_.Exception.Response.StatusCode } catch { }
+        $msg = Get-NexErrorText $_
+        if ($code -eq 429) {
+            $r.Retry = 5
+            try { $j = ConvertFrom-NexJson $_.ErrorDetails.Message; if ($j['retry_after']) { $r.Retry = [math]::Ceiling([double]$j['retry_after']) } } catch { }
+            $r.Message = 'Discord: zu viele Nachrichten, gleich noch einmal'
+        } elseif ($code -eq 404 -and $MsgId -and $msg -match 'Unknown Message|10008') {
+            $r.Gone = $true; $r.Message = 'Discord: Nachricht gibt es nicht mehr'
+        } elseif ($code -eq 404 -or $code -eq 401) {
+            $r.Message = 'Discord: Webhook gibt es nicht mehr (in Discord gelöscht?) – bitte in den Einstellungen neu eintragen'
+        } else {
+            $r.Message = 'Discord: ' + $msg
+        }
+        $r.Message = $r.Message.Replace($Url, '(Webhook)')
+        return $r
+    }
+}
+
+# Neue/geaenderte/geloeschte Setups nach Discord (hoechstens jede Minute)
+function Invoke-NexSetupPosts($ctx, [long] $Now = 0, [switch] $Force) {
+    $cfg = $ctx.cfg
+    $state = $ctx.state
+    $out = @{ Posted = 0; Edited = 0; Removed = 0; Message = ''; Error = ''; Info = '' }
+    $url = [string]$cfg.setupUrl; if (-not $url) { $url = [string]$cfg.discordUrl }
+    if (-not $url -or -not $cfg.discordSetups) { return $out }
+    if ($Now -le 0) { $Now = Get-NexUnixNow }
+    if ($state.Contains('dsWait') -and (Get-NexLong $state['dsWait']) -gt $Now) { return $out }
+    if (-not $Force -and ($Now - (Get-NexLong $state['dsCheck'])) -lt 60) { return $out }
+    $state['dsCheck'] = $Now
+    $hook = Get-NexHookId $url
+    try {
+        $r = Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_setup_claim' ([ordered]@{ p_guild = $cfg.guild; p_hook = $hook; p_by = $cfg.name; p_secret = $cfg.password })
+    } catch {
+        $msg = $_.Exception.Message
+        if (Test-NexMissingRpc $msg 'nexloot_setup_claim') { $out.Error = 'Raid-Setups: In Supabase fehlt noch die neue nexloot_konten.sql (einmal im SQL Editor ausführen).'; $state['dsWait'] = $Now + 3600 }
+        else { $out.Error = 'Raid-Setups: ' + $msg; $state['dsWait'] = $Now + 300 }
+        return $out
+    }
+    $state.Remove('dsWait')
+    $people = $r['people']
+    $names = New-Object System.Collections.ArrayList
+    foreach ($j in @($r['jobs'])) {
+        if (-not ($j -is [System.Collections.IDictionary])) { continue }
+        $id = Get-NexLong $j['id']; $rev = Get-NexLong $j['rev']; $msgId = [string]$j['msg']; $own = ($msgId -and [string]$j['hook'] -eq $hook)
+        $title = [string]$j['title']
+        if ([string]$j['status'] -ne 'published') {
+            $res = @{ Ok = $true; Gone = $false }
+            if ($own) { $res = Invoke-NexWebhook $url 'DELETE' $msgId $null }
+            elseif ($msgId) { $out.Info = 'Raid-Setup „' + $title + '“: die alte Discord-Nachricht kam von einem anderen Webhook und muss in Discord von Hand gelöscht werden.' }
+            if ($res.Ok -or $res.Gone) {
+                [void](Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_setup_done' ([ordered]@{ p_guild = $cfg.guild; p_id = $id; p_rev = $rev; p_msg = $null; p_hook = $null; p_by = $cfg.name; p_secret = $cfg.password }))
+                if ($msgId) { $out.Removed++; [void]$names.Add('„' + $title + '“ entfernt') }
+                continue
+            }
+        } else {
+            $payload = New-NexSetupMessage $j $people ([string]$cfg.webUrl) $r['ids'] ([bool]$cfg.discordSetupPing) $r['emojis']
+            $res = $null; $edit = $false
+            if ($own) { $res = Invoke-NexWebhook $url 'PATCH' $msgId $payload; $edit = $true; if ($res.Gone) { $res = $null; $edit = $false } }
+            if ($null -eq $res) { $res = Invoke-NexWebhook $url 'POST' '' $payload }
+            if ($res.Ok -and $res.Id -match '^\d{1,25}$') {
+                [void](Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_setup_done' ([ordered]@{ p_guild = $cfg.guild; p_id = $id; p_rev = $rev; p_msg = $res.Id; p_hook = $hook; p_by = $cfg.name; p_secret = $cfg.password }))
+                if ($edit) { $out.Edited++; [void]$names.Add('„' + $title + '“ aktualisiert') } else { $out.Posted++; [void]$names.Add('„' + $title + '“ gepostet') }
+                if ($msgId -and -not $own) { $out.Info = 'Raid-Setup „' + $title + '“: die alte Discord-Nachricht kam von einem anderen Webhook und bleibt stehen (in Discord von Hand löschen).' }
+                continue
+            }
+            if ($res.Ok) { $res.Message = 'Discord: keine Nachrichten-Kennung zurückbekommen' }
+        }
+        # hat nicht geklappt: Reservierung aufheben, spaeter noch einmal
+        try { [void](Invoke-NexHttp $cfg 'POST' '/rest/v1/rpc/nexloot_setup_release' ([ordered]@{ p_guild = $cfg.guild; p_id = $id; p_secret = $cfg.password })) } catch { }
+        $out.Error = ([string]$res.Message).Replace($url, '(Webhook)')
+        if ($res.Retry -gt 0) { $state['dsWait'] = $Now + $res.Retry } else { $state['dsWait'] = $Now + 300 }
+        break
+    }
+    if ($names.Count -gt 0) { $out.Message = 'Discord: Raid-Setup ' + ($names -join ', ') + '.' }
     return $out
 }
 
